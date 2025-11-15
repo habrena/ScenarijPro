@@ -1,0 +1,346 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', "Inter", sans-serif;
+}
+
+body {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background-color: #f5f6fa;
+}
+
+/* Lijevi sidebar  */
+.lijevo-sidebar {
+    background-color: #f8f9fb;
+    width: 250px;
+    position: fixed; 
+    top: 0;
+    bottom: 0;
+    left: 0;
+    padding: 30px 20px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    margin-bottom: 40px;
+    padding-left: 10px;
+}
+
+#title {
+    color: #6705f9;
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.sidebar-opcije{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-opcija {
+    padding: 15px 20px;
+    margin: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.sidebar-opcija:hover {
+    background-color: #f0f0f5; 
+    border-radius: 8px; 
+}
+#sidebar-opcija1 {
+    background-color: #e6e6fa; 
+    border-radius: 8px;
+    
+}
+#sidebar-opcija1 h4{
+    color: #6705f9;
+    font-weight: 600;
+}
+
+.sidebar-opcija h4 {
+    font-weight: 450;
+    color: #7e7e80;
+    font-size: 16px;
+}
+
+
+#sidebar-linija {
+    margin: 20px 0;
+    border-color: 1px solid #b0b1b1;
+    opacity: 40%;
+}
+
+.sidebar-user-mini-profil {
+    margin-top: 2px;
+    display: flex;
+    flex-direction: row;
+    padding: 8px 8px 8px 18px ;
+    /*background-color: #f5f5f7;*/
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.sidebar-user-mini-profil-tekst {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#ikona {
+    background-color: #333333;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+    margin-right: 10px;
+}
+
+.sidebar-user-mini-profil-tekst h5 {
+    color: #333333;
+    font-size: 16px;
+    margin-bottom: 0px;
+    padding-left: 4px;
+}
+
+.sidebar-user-mini-profil-tekst h6 {
+    color: #767879;
+    font-size: 12px;
+    font-weight: 400;
+    margin-left: 10px;
+}
+
+/* glavni sadrzaj */
+#glavni-meni {
+    background-color: #f5f6fa;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 40px;
+    margin-left: 280px;
+    min-height: 100vh;
+}
+
+#zaglavlje {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+#zaglavlje h1 {
+    color: #2c3e50;
+    font-size: 40px;
+    font-weight: 700;
+}
+
+.input-forme {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+#pretraga {
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    display: inline;
+    width:40%
+}
+
+#dugmeNoviProjekat {
+    background-color:  #5B3FFF;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+#dugmeNoviProjekat:hover {
+    background-color: #5a04d6; 
+    transition: background-color 0.3s ease;
+}
+/* grid */
+#mreza {
+    display: grid;
+    gap: 25px;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.kartica {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    cursor: pointer;
+}
+.kartica:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px); 
+}
+
+.kartica h4 {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 0px;
+}
+
+.kartica > p {
+    color: #7f8c8d;
+    font-size: 14px;
+    margin-bottom: 0px;
+    font-style: italic;
+}
+
+.kartica-mini-container-linija{
+    display: flex;
+    flex-direction: row;
+    font-size: 12px;
+}
+
+.kartica-mini-container {
+    display: grid;
+    grid-template-columns: 1fr; 
+    gap: 8px;
+}
+.kartica.active{
+    border: 1.2px solid #100375a1;
+}
+.kartica-zaglavlje-gornjaLinija{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1px;
+
+}
+.aktivnaKartica{
+    background-color: #e1dcfd;
+    border-radius: 15px;
+    text-align: center;
+    color:#100375a1;
+    font-weight: 600;
+    padding: 4px;
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+.kartica-mini-title{
+    font-weight: 800;
+    margin-right: 5px;
+}
+
+.kartica-zaglavlje{
+    margin-bottom: 20px;
+}
+.kartica-zaglavlje p{
+    font-weight: 400;
+    color: #8f8f90;
+}
+
+.kartica-mini-container h5 {
+    color: #2e3f51;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kartica-mini-container p {
+    color: #34495e;
+    font-size: 14px;
+    margin-bottom: 0px;
+}
+
+/* dodaj Kartica */
+#dodajKartica1 {
+    border: 2px dashed #bdc3c7;
+    background-color: #f4f4f6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+}
+
+#dodajKartica1:hover {
+    background-color: #e0e0e5;
+    transition: background-color 0.3s ease;
+}
+
+#dodajKartica1 h4 {
+    font-size: 48px;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+}
+
+#dodajKartica1 p {
+    color: #7f8c8d;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+}
+
+
+@media (max-width: 750px) {
+    body{
+        flex-direction: column;
+    }
+    #mreza {
+        grid-template-columns: 1fr;
+    }
+    .lijevo-sidebar {
+        width: 100%;
+        position: relative;
+        height: auto; 
+        padding: 20px;
+        order: 1; 
+    }
+    
+    #glavni-meni {
+        margin-left: 0; 
+        padding: 20px;
+        order: 2;
+        min-height: auto; 
+    }
+    
+    #zaglavlje {
+        flex-direction: column;
+        gap: 20px;
+        align-items: flex-start;
+    }
+    
+    .input-forme {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    #pretraga {
+        width: 200px;
+    }
+    .title {
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-opcije {
+        gap: 5px;
+    }
+    
+    .sidebar-opcija {
+        padding: 12px 15px;
+    }
+}
