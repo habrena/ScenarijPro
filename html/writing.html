@@ -66,11 +66,33 @@
 
     <!-- Editor -->
     <main id="editor">
+
+       <!--dugmad za one funkcije-->
+      <div id="modul-kontrole"> 
+        <input type="button" class="dugme" id="dugmeBrojRijeci" value="Broj Riječi">
+        <input type="button" class="dugme" id="dugmeDajUloge" value="Daj Uloge">
+        <input type="button" class="dugme" id="dugmePogresnaUloga" value="Pogresna uloga">
+        <input type="button" class="dugme" id="dugmeBrojLinijaTeksta" value="Broj Linija Teksta">
+
+          <!--input forma za ulogu koja je potrebna za dajBrojLinijaTeksta dugme-->
+         <div class="kontrola-uloge">
+            <input type="text" id="inputUloga" placeholder="Ime uloge..." class="input-tekst">
+        </div>
+
+        <input type="button" class="dugme" id="dugmeScenarijUloge" value="Scenarij Uloge">
+        <input type="button" class="dugme" id="dugmeGrupisiUloge" value="Grupisi Uloge">
+        <!--dugmad za formatiranje-->
+        <input type="button" class="dugme" id="dugmeBold" value="Bold">
+        <input type="button" class="dugme" id="dugmeItalic" value="Italic">
+        <input type="button" class="dugme" id="dugmeUnderline" value="Underline">
+      </div>
+      <div id="poruke">
+        ...
+      </div>
       <div class="editor-sadrzaj">
-        <br>
-        <br>
-        <h1 class="scena-naslov">INT. NEW YORK. PUBLISHING OFFICE. 1868.</h1>
-        <p class="action">JO MARCH, our heroine, hesitates.
+         <div id="divEditor" contenteditable="true">
+        <h1 class="scena-naslov">EXT. - DAY</h1>
+       <p>JO MARCH, our heroine, hesitates.
 In the half-light of a dim hallway, she exhales and prepares,
 her head bowed like a boxer about to go into the ring. She
 puts her hand on the doorknob. A pause, and then, she opens
@@ -78,9 +100,55 @@ it onto a disorderly room.
 It is full of men. Some sit with their feet up on the desks,
 higher than their hats, which they do not remove for her.
 They smoke and read, hardly noticing that she has walked in.</p>
-        
+                <br>
+                <p>JO MARCH</p>
+                <p><span style="font-style: italic;">Hello</span>. Ovo je druga rečenica. Ovdje su dvije riječi.</p>
+                <br>
+                <p>(uzdah)</p>
+                <p>JO MARCH</p>
+                <p>Ovo je nesto drugo<span style="font-weight: bold;">nepoznato</span>.</p>
+                <br>
+                <p>MIG MARCH</p>
+                <p>hi</p>
+                <br>
+                <p>BETH MARCH</p>
+                <p>hello!!!</p>
+                <br>
+                <p>JO MARCH</p>
+                <p>bla bla bla.</p>
+                <br>
+                <p>MEG MARCH</p>
+                <p>bla bla.</p>
+                <br>
+                <p>JO MARCH</p>
+                <p>bla bla bla bla bla.</p>
+                <br>
+                <p>MEG MARCH</p>
+                <p>hahaha</p>
+                <br>
+                <p>JO MARCH</p>
+                <p>hihihi</p>
+                <br>
+                <p>MEG MARCH</p>
+                <p>hehehehehe</p>
+                <br>
+                <p>JO MARCH</p>
+                <p>hihihiih</p>
+                <br>
+                <p>MEG MARCH</p>
+                <p>ahahhaaihiih</p>
+                <br>
+                <p>JO MARCH</p>
+                <p>hihihiih</p>
+                <br>
+                <p>MEG MARCH</p>
+                <p>ahahhaaihiih</p>
+                <br>
+         </div>
       </div>
     </main>
   </div>
+<script src="../js/EditorTeksta.js"></script>
+<script src="../js/editor.js"></script>
 </body>
 </html>
