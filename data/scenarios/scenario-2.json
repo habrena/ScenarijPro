@@ -1,0 +1,10 @@
+{
+  "id": 2,
+  "title": "Moj Drugi Film",
+  "content": [
+    { "lineId": 1, "nextLineId": 2, "text": "EXT. GRAD - DAN"},
+    { "lineId": 2, "nextLineId": 3, "text": "Marko izlazi iz kuce." },
+    { "lineId": 3, "nextLineId": 4, "text": "MARKO" },
+    { "lineId": 4, "nextLineId": null, "text": "Gdje cemo sad na kafu?" }
+  ]
+}

@@ -294,6 +294,61 @@ body {
     font-weight: 500;
     margin: 0;
 }
+/*novo*/
+.add-card {
+          border: 2px dashed #aaa !important; /* Isprekidana linija */
+          background-color: #f8f9fa;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          transition: 0.3s;
+          text-align: center;
+      }
+      .add-card:hover {
+          border-color: #666 !important;
+          background-color: #eee;
+      }
+      
+      /* Input polje unutar kartice */
+      #novi-naslov {
+          width: 80%;
+          padding: 8px;
+          margin-bottom: 10px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-family: 'Poppins', sans-serif;
+          font-size: 14px;
+      }
+
+      /* Dugmad unutar kartice */
+      .buttons {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          width: 100%;
+      }
+      
+      .btn-save, .btn-cancel {
+          padding: 5px 12px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 500;
+          color: white;
+      }
+      
+      .btn-save { background-color: #28a745; } /* Zelena */
+      .btn-save:hover { background-color: #218838; }
+
+      .btn-cancel { background-color: #dc3545; } /* Crvena */
+      .btn-cancel:hover { background-color: #c82333; }
+
+      /* Centriranje plusa */
+      #view-initial h4 { font-size: 40px; margin: 0; color: #555; }
+      #view-initial p { margin: 0; color: #777; }
 
 
 @media (max-width: 750px) {

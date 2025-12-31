@@ -3,10 +3,11 @@ let EditorTeksta=function(divRef){
         throw new Error("Pogresan tip elementa!");
     }
 
-    // provjera contenteditable atributa
+    /* provjera contenteditable atributa
     if (divRef.getAttribute('contenteditable') !== 'true') {
         throw new Error("Neispravan DIV, ne posjeduje contenteditable atribut!");
     }
+        */
     //konstruktorrr
     const editorDiv = divRef;
 

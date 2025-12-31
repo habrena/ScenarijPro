@@ -1,0 +1,344 @@
+[
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": 5,
+    "content": "BASCARSIJA - DAN",
+    "timestamp": 1767118689
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 5,
+    "nextLineId": 2,
+    "content": "Bas je tmuran dan!",
+    "timestamp": 1767118698
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 5,
+    "nextLineId": 6,
+    "content": "Bas je tmuran dan! Kako cu danas moci na planinu? Nikako! Eto kako. Mrzim ovaj smog. I ove oblake. Sve",
+    "timestamp": 1767118957
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 6,
+    "nextLineId": 2,
+    "content": "sve sve mi se smucilo.",
+    "timestamp": 1767118957
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": 5,
+    "content": "BASCARSIJA - DAN",
+    "timestamp": 1767119323
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 6,
+    "nextLineId": 2,
+    "content": "Sve sve mi se smucilo.",
+    "timestamp": 1767120309
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 2,
+    "nextLineId": 3,
+    "content": "Meho izlazi iz sobe.",
+    "timestamp": 1767120420
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 3,
+    "nextLineId": 4,
+    "content": "MEHO",
+    "timestamp": 1767120431
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 5,
+    "nextLineId": 6,
+    "content": "Bas je tmuran dan! Kako cu danas moci na planinu? Nikako! Eto kako. Mrzim ovaj smog. I ove oblake.",
+    "timestamp": 1767120463
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": 5,
+    "content": "BASCARSIJA - JUTRO",
+    "timestamp": 1767120515
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 5,
+    "nextLineId": 6,
+    "content": "Bas je tmuran dan! Kako cu danas na planinu? Nikako! Eto kako. Mrzim ovaj smog. I ove oblake.",
+    "timestamp": 1767121038
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MEHO",
+    "newName": "MIRSAD",
+    "timestamp": 1767131531
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MIRSAD",
+    "newName": "MAK",
+    "timestamp": 1767131691
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MAK",
+    "newName": "MEHO",
+    "timestamp": 1767132054
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MEHO",
+    "newName": "MAHMUT",
+    "timestamp": 1767132139
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MAHMUT",
+    "newName": "MEHO",
+    "timestamp": 1767132363
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 4,
+    "nextLineId": 5,
+    "content": "Pridjevi za kafu su&nbsp;",
+    "timestamp": 1767136078
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 4,
+    "nextLineId": 5,
+    "content": "Pridjevi za kafu su",
+    "timestamp": 1767136098
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 4,
+    "nextLineId": 5,
+    "content": "Pridjevi za kafu su jaka, gorka, blaga, slatka, kisela, gusta, kremasta, crna, bistra, pjenasta, mirisna, aromaticna",
+    "timestamp": 1767136171
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 4,
+    "nextLineId": 7,
+    "content": "Pridjevi za kafu su jaka, gorka, blaga, slatka, kisela, gusta, kremasta, crna, bistra, pjenasta, mirisna, aromaticna, opojna, vruca, hladna, svjeza,",
+    "timestamp": 1767136271
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 7,
+    "nextLineId": 5,
+    "content": "turska, domaca, kratka, produzena",
+    "timestamp": 1767136271
+  },
+  {
+    "scenarioId": 6,
+    "type": "line_update",
+    "lineId": 4,
+    "nextLineId": null,
+    "content": "Pridjevi za kafu su&nbsp;",
+    "timestamp": 1767137089
+  },
+  {
+    "scenarioId": 6,
+    "type": "line_update",
+    "lineId": 4,
+    "nextLineId": null,
+    "content": "Pridjevi za kafu su",
+    "timestamp": 1767137109
+  },
+  {
+    "scenarioId": 6,
+    "type": "line_update",
+    "lineId": 4,
+    "nextLineId": 7,
+    "content": "Pridjevi za kafu su jaka, gorka, blaga, slatka, kisela, gusta, kremasta, crna, bistra, pjenasta, mirisna, aromaticna, opojna, vruca, hladna, svjeza,",
+    "timestamp": 1767137220
+  },
+  {
+    "scenarioId": 6,
+    "type": "line_update",
+    "lineId": 7,
+    "nextLineId": 5,
+    "content": "turska, domaca, kratka, produzena",
+    "timestamp": 1767137220
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MEHO",
+    "newName": "MIRSAD",
+    "timestamp": 1767138257
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 4,
+    "nextLineId": 8,
+    "content": "Ja mnogo volim kafu. Pridjevi za kafu su jaka, gorka, blaga, slatka, kisela, gusta, kremasta, crna, bistra, pjenasta, mirisna, aromaticna,",
+    "timestamp": 1767139484
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 8,
+    "nextLineId": 7,
+    "content": "opojna, vruca, hladna, svjeza,",
+    "timestamp": 1767139484
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 8,
+    "nextLineId": 7,
+    "content": "MIRSAD",
+    "timestamp": 1767140191
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 6,
+    "nextLineId": null,
+    "content": "MEHO",
+    "timestamp": 1767140198
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 7,
+    "nextLineId": 5,
+    "content": "turska, domaca, kratka, produzena mmmm",
+    "timestamp": 1767140202
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": 9,
+    "content": "Ovo je prva rijec druga treca cetvrta peta sesta sedma osma deveta deseta jedanaesta dvanaesta trinaesta cetrnaesta petnaesta sesnaesta sedamnaesta",
+    "timestamp": 1767184375
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 9,
+    "nextLineId": 2,
+    "content": "osamnaesta devetnaesta dvadeseta dvadesetprva OVO TREBA BITI NOVA LINIJA",
+    "timestamp": 1767184375
+  },
+  {
+    "scenarioId": 3,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": null,
+    "content": "Melisa ulazi u kucu.",
+    "timestamp": 1767197409
+  },
+  {
+    "scenarioId": 4,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": null,
+    "content": "Melisa ulazi u kucu.",
+    "timestamp": 1767197677
+  },
+  {
+    "scenarioId": 8,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": null,
+    "content": "Melisa ulazi u kucu.",
+    "timestamp": 1767198129
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": 9,
+    "content": "MEHO",
+    "timestamp": 1767198843
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 9,
+    "nextLineId": 2,
+    "content": "Mirsade, hajmo na kafu",
+    "timestamp": 1767198856
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 1,
+    "nextLineId": 9,
+    "content": "BASCARSIJA - DAN",
+    "timestamp": 1767198870
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 9,
+    "nextLineId": 2,
+    "content": "Mirsad izlazi iz sobe.",
+    "timestamp": 1767198881
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MIRSAD",
+    "newName": "MEHO",
+    "timestamp": 1767198891
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MEHO",
+    "newName": "MIRSAD",
+    "timestamp": 1767199318
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 8,
+    "nextLineId": 7,
+    "content": "MEHO",
+    "timestamp": 1767200355
+  },
+  {
+    "type": "char_rename",
+    "oldName": "MIRSAD",
+    "newName": "EMIN",
+    "timestamp": 1767210200
+  },
+  {
+    "scenarioId": 1,
+    "type": "line_update",
+    "lineId": 2,
+    "nextLineId": 3,
+    "content": "Emin izlazi iz sobe.",
+    "timestamp": 1767210249
+  }
+]

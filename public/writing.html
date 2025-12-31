@@ -11,10 +11,11 @@
   <div id="zaglavlje">
     <button id="strelicaLijevo">←</button>
     <div id="title">
-      <h2>LITTLE WOMEN  (Draft 2)</h2>
+      <h2 id="naslov-scenarija">Ucitavanje</h2>
     </div>
     <div class="dugmad">
       <div id="dugmad2">
+        
         <input type="button" class="dugme" id="dugmeScena" value="SCENA">
         <input type="button" class="dugme" id="dugmeAkcija" value="AKCIJA">
         <input type="button" class="dugme" id="dugmeLik" value="LIK">
@@ -30,22 +31,23 @@
     <!-- Sidebar -->
     <div id="sidebar">
       <div class="sidebar-section">
-        <h3 class="sidebar-titl">Scene (3)</h3>
+        <h3 class="sidebar-titl">Scene (1)</h3>
         <ul class="scena-lista">
           <li class="scena-item active">
             <div class="scena-sadrzaj">
                <div class="scena-gornji-red">
                 <span class="scena-broj">1.</span>
-                <span class="scena-titl">INT. NEW YORK. PUBLISHING OFFICE. 1868.</span>
+                <span class="scena-titl" id="sidebarTitle1">Ucitavanje...</span>
               </div>
               <div class="scena-pages">(1/8)</div> 
             </div>
           </li>
+          <!--
           <li class="scena-item">
             <div class="scena-sadrzaj">
                <div class="scena-gornji-red">
                 <span class="scena-broj">2.</span>
-                <span class="scena-titl">EXT./INT. BOARDING HOUSE. NYC. DAY. 1868.</span>
+                <span class="scena-titl" id="sidebarTitle2">EXT./INT. BOARDING HOUSE. NYC. DAY. 1868.</span>
               </div>
               <div class="scena-pages">(3/8)</div> 
             </div>
@@ -54,11 +56,12 @@
             <div class="scena-sadrzaj">
                <div class="scena-gornji-red">
                 <span class="scena-broj">3.</span>
-                <span class="scena-titl">EXT. FRANCE. PARIS. DAY. 1868.</span>
+                <span class="scena-titl" id="sidebarTitle3">EXT. FRANCE. PARIS. DAY. 1868.</span>
               </div>
               <div class="scena-pages">(2/8)</div> 
             </div>
           </li>
+        -->
         </ul>
         <hr class="linija">
       </div>
@@ -69,6 +72,7 @@
 
        <!--dugmad za one funkcije-->
       <div id="modul-kontrole"> 
+        
         <input type="button" class="dugme" id="dugmeBrojRijeci" value="Broj Riječi">
         <input type="button" class="dugme" id="dugmeDajUloge" value="Daj Uloge">
         <input type="button" class="dugme" id="dugmePogresnaUloga" value="Pogresna uloga">
@@ -86,69 +90,45 @@
         <input type="button" class="dugme" id="dugmeItalic" value="Italic">
         <input type="button" class="dugme" id="dugmeUnderline" value="Underline">
       </div>
+      <!--NOVO-->
+      <div class="sekundarni-kontrolni-red">
+          
+          <div id="character-change-container">
+            
+            <div id="step-1-lock" class="char-control-row">
+                <label for="old-char-name">Promjena imena:</label>
+                <input type="text" id="old-char-name" placeholder="STARO IME">
+                <button id="btn-lock-char" class="dugme">Zaključaj</button>
+            </div>
+
+            <div id="step-2-update" class="char-control-row" style="display: none;">
+                <strong>Mijenjamo: <span id="display-old-name" style="color: #D68A00;"></span></strong>
+                <input type="text" id="new-char-name" placeholder="NOVO IME">
+                <button id="btn-update-char" class="dugme dugme-zeleno">Sačuvaj</button>
+                <button id="btn-cancel-char" class="dugme">Odustani</button>
+            </div>
+
+          </div>
+
+          <div id="delta-check-container">
+            <div class="char-control-row">
+              <label for="delta-since-input">Izmjene od:</label>
+              <input type="datetime-local" id="delta-since-input">
+              <button id="btn-get-deltas" class="dugme">Provjeri</button>
+          </div>
+    </div>
+
+      </div>
       <div id="poruke">
-        ...
       </div>
       <div class="editor-sadrzaj">
-         <div id="divEditor" contenteditable="true">
-        <h1 class="scena-naslov">EXT. - DAY</h1>
-       <p>JO MARCH, our heroine, hesitates.
-In the half-light of a dim hallway, she exhales and prepares,
-her head bowed like a boxer about to go into the ring. She
-puts her hand on the doorknob. A pause, and then, she opens
-it onto a disorderly room.
-It is full of men. Some sit with their feet up on the desks,
-higher than their hats, which they do not remove for her.
-They smoke and read, hardly noticing that she has walked in.</p>
-                <br>
-                <p>JO MARCH</p>
-                <p><span style="font-style: italic;">Hello</span>. Ovo je druga rečenica. Ovdje su dvije riječi.</p>
-                <br>
-                <p>(uzdah)</p>
-                <p>JO MARCH</p>
-                <p>Ovo je nesto drugo<span style="font-weight: bold;">nepoznato</span>.</p>
-                <br>
-                <p>MIG MARCH</p>
-                <p>hi</p>
-                <br>
-                <p>BETH MARCH</p>
-                <p>hello!!!</p>
-                <br>
-                <p>JO MARCH</p>
-                <p>bla bla bla.</p>
-                <br>
-                <p>MEG MARCH</p>
-                <p>bla bla.</p>
-                <br>
-                <p>JO MARCH</p>
-                <p>bla bla bla bla bla.</p>
-                <br>
-                <p>MEG MARCH</p>
-                <p>hahaha</p>
-                <br>
-                <p>JO MARCH</p>
-                <p>hihihi</p>
-                <br>
-                <p>MEG MARCH</p>
-                <p>hehehehehe</p>
-                <br>
-                <p>JO MARCH</p>
-                <p>hihihiih</p>
-                <br>
-                <p>MEG MARCH</p>
-                <p>ahahhaaihiih</p>
-                <br>
-                <p>JO MARCH</p>
-                <p>hihihiih</p>
-                <br>
-                <p>MEG MARCH</p>
-                <p>ahahhaaihiih</p>
-                <br>
+         <div id="divEditor"> 
          </div>
       </div>
     </main>
   </div>
-<script src="../js/EditorTeksta.js"></script>
-<script src="../js/editor.js"></script>
+<script src="js/PoziviAjaxFetch.js"></script> 
+<script src="js/EditorTeksta.js"></script>
+<script src="js/editor.js"></script>
 </body>
 </html>

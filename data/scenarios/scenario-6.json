@@ -1,0 +1,41 @@
+{
+  "id": 6,
+  "title": "Moj Prvi Film",
+  "content": [
+    {
+      "lineId": 1,
+      "nextLineId": 5,
+      "text": "BASCARSIJA - JUTRO"
+    },
+    {
+      "lineId": 2,
+      "nextLineId": 3,
+      "text": "Meho izlazi iz sobe."
+    },
+    {
+      "lineId": 3,
+      "nextLineId": 4,
+      "text": "MIRSAD"
+    },
+    {
+      "lineId": 4,
+      "nextLineId": 7,
+      "text": "Pridjevi za kafu su jaka, gorka, blaga, slatka, kisela, gusta, kremasta, crna, bistra, pjenasta, mirisna, aromaticna, opojna, vruca, hladna, svjeza,"
+    },
+    {
+      "lineId": 7,
+      "nextLineId": 5,
+      "text": "turska, domaca, kratka, produzena"
+    },
+    {
+      "lineId": 5,
+      "nextLineId": 6,
+      "text": "Bas je tmuran dan! Kako cu danas na planinu? Nikako! Eto kako. Mrzim ovaj smog. I ove oblake."
+    },
+    {
+      "lineId": 6,
+      "nextLineId": null,
+      "text": "Sve sve mi se smucilo."
+    }
+  ]
+}
