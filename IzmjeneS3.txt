@@ -1,0 +1,2 @@
+Pokrenuto bez izmjena.
+NAPOMENA: tests3Fetch.html mora biti u istom folderu kao i PoziviAjaxFetch. 

@@ -15,7 +15,6 @@ const lockedLines = {};
 const userLocks = {};
 
 
-
 app.post('/api/scenarios',(req, res)=>{
     // priprema naslova
     let naslov = req.body.title;
