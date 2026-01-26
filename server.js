@@ -1,6 +1,8 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
+//const fs = require('fs');
+
+const { Op } = require("sequelize");
 
 const app = express();
 const PORT = 3000;
@@ -15,115 +17,130 @@ const lockedLines = {};
 const userLocks = {};
 
 
-app.post('/api/scenarios',(req, res)=>{
+app.post('/api/scenarios', async (req, res)=>{
     // priprema naslova
     let naslov = req.body.title;
     if (!naslov || naslov.trim() === "") {naslov="Neimenovani scenarij";}
 
-    const folderPutanja = path.join(__dirname, 'data', 'scenarios');
-    
-    //ako folder ne postoji, napravi ga
-    if (!fs.existsSync(folderPutanja)) {
-        fs.mkdirSync(folderPutanja, { recursive: true });
-    }
-
-    const fajlovi = fs.readdirSync(folderPutanja);
-    let maxId = 0;
-
-    fajlovi.forEach(fajl => {
-        if (fajl.startsWith('scenario-') && fajl.endsWith('.json')) {
-            const broj = parseInt(fajl.replace('scenario-', '').replace('.json', ''));
-
-            if (!isNaN(broj) && broj > maxId){maxId=broj;}
-        }
-    });
-    
-    const noviId=maxId+1;
-
-    //kreiranje objekta
-    const noviScenarij = {
-        id: noviId,
-        title: naslov,
-        content: [ 
-            {
-                lineId: 1,
-                nextLineId: null,
-                text: "" 
-            }
-        ]
-    };
-    const nazivNovogFajla = `scenario-${noviId}.json`;
-    const punaPutanja = path.join(folderPutanja, nazivNovogFajla);
-
     try {
-        fs.writeFileSync(punaPutanja, JSON.stringify(noviScenarij, null, 2));
-        res.status(200).json(noviScenarij);
+        //kreiranje scenarija u bazi
+        const noviScenario = await db.Scenario.create({
+            title: naslov
+        });
+        const novaLinija = await db.Line.create({
+            lineId: 1, 
+            text: "",
+            nextLineId: null,
+            scenarioId: noviScenario.id //veza sa scenarijem
+        });
+        const odgovor = {
+            id: noviScenario.id,
+            title: noviScenario.title,
+            content: [
+                {
+                    lineId: novaLinija.lineId,
+                    nextLineId: novaLinija.nextLineId,
+                    text: novaLinija.text
+                }
+            ]
+        };
+        res.status(200).json(odgovor);
+
     } catch (error) {
-        res.status(500).json({ message: "Greška prilikom kreiranja fajla." });
+        console.error("Greška:", error);
+        res.status(500).json({ message: "Greška prilikom kreiranja scenarija." });
     }
 });
 
-
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ruta koja čita scenarij na osnovu ida
-app.get('/api/scenarios/:id', (req, res) => {
-    const id = req.params.id; // Ovo će biti '1'
-    const putanjaDoFajla = path.join(__dirname, 'data', 'scenarios', `scenario-${id}.json`); //svidja mi se ovo umjesto stavljanja prave putanje
+// ruta koja cita scenarij na osnovu ida
+app.get('/api/scenarios/:id', async (req, res) => {
+     const id = parseInt(req.params.id);
 
-    //provjeravamo postoji li fajl
-    if (fs.existsSync(putanjaDoFajla)) {
-        try {
-            const sadrzaj = fs.readFileSync(putanjaDoFajla, 'utf8');
-            const jsonSadrzaj = JSON.parse(sadrzaj);
-            
-            res.status(200).json(jsonSadrzaj);
-        } catch (err) {
-            res.status(404).json({ message: "Scenario ne postoji!" });
+    try {
+        //provjera da li scenario postoji
+        const scenario = await db.Scenario.findOne({ where: { id: id } });
+
+        if (!scenario) {
+            return res.status(404).json({ message: "Scenario ne postoji!" });
         }
-    } else {
-        res.status(404).json({ message: "Scenario ne postoji!" });
+
+        //dohvatanje svih linija vezanih za taj scenario
+        const lines = await db.Line.findAll({ where: { scenarioId: id } });
+
+        //rekonstrukcija povezane liste
+        const lineMap = new Map();
+        lines.forEach(line => {
+            lineMap.set(line.lineId, line);
+        });
+
+        const orderedContent = [];
+        let currentLineId = 1;
+        let maxLoop = lines.length + 10; 
+        let counter = 0;
+
+        //krecemo se kroz linije prateci nextLineId
+        while (currentLineId !== null && counter < maxLoop) {
+            const currentLine = lineMap.get(currentLineId);
+            
+            if (currentLine) {
+                //dodajemo u niz samo podatke koji trebaju klijentu
+                orderedContent.push({
+                    lineId: currentLine.lineId,
+                    nextLineId: currentLine.nextLineId,
+                    text: currentLine.text
+                });
+
+                //skacmo na iduću liniju
+                currentLineId = currentLine.nextLineId;
+            } else {
+                //ako pointer pokazuje na liniju koja ne postoji, prekidamo
+                break;
+            }
+            counter++;
+        }
+
+        res.status(200).json({
+            id: scenario.id,
+            title: scenario.title,
+            content: orderedContent
+        });
+
+    } catch (error) {
+        console.error("Greška pri dohvatanju scenarija:", error);
+        res.status(500).json({ message: "Greška na serveru." });
     }
 });
 
 //druga ruta - zakljucavanje
-app.post('/api/scenarios/:scenarioId/lines/:lineId/lock', (req, res) => {
+app.post('/api/scenarios/:scenarioId/lines/:lineId/lock', async(req, res) => {
     const scenarioId = parseInt(req.params.scenarioId);
     const lineId = parseInt(req.params.lineId);
-    const userId = req.body.userId; //salje json samo sa kljucem korisnika
+    const { userId } = req.body;
 
-  
-    const putanja = path.join(__dirname, 'data', 'scenarios', `scenario-${scenarioId}.json`);
-    
-    if (!fs.existsSync(putanja)) {
+    const scenario = await db.Scenario.findOne({ where: { id: scenarioId } });
+    if (!scenario) {
         return res.status(404).json({ message: "Scenario ne postoji!" });
     }
-
-    // citanje fajla
-    const scenario = JSON.parse(fs.readFileSync(putanja, 'utf8'));
-    
-    
-    const linijaPostoji = scenario.content.find(l => l.lineId === lineId);
+    const linijaPostoji = await db.Line.findOne({ where: { scenarioId: scenarioId, lineId: lineId } });
     if (!linijaPostoji) {
         return res.status(404).json({ message: "Linija ne postoji!" });
     }
-
-   
     const lockKey= `${scenarioId}-${lineId}`;
+
+    if (userLocks[userId]) {
+        const oldLock = userLocks[userId];
+        delete lockedLines[oldLock];
+        delete userLocks[userId];
+    }
+
     if (lockedLines[lockKey] && (lockedLines[lockKey] !== userId)) {
         return res.status(409).json({ message: "Linija je vec zakljucana!" });
     }
 
-   
-    if (userLocks[userId]) {
-        const oldLock = userLocks[userId];
-        const oldKey = `${oldLock.scenarioId}-${oldLock.lineId}`;
-        delete lockedLines[oldKey]; // Brišemo stari lock
-    }
-
-
     lockedLines[lockKey] = userId;
-    userLocks[userId] = { scenarioId, lineId };
+    userLocks[userId] = lockKey;
 
     res.status(200).json({ message: "Linija je uspjesno zakljucana!" });
 });
@@ -171,8 +188,7 @@ function prelomiTekst(tekst) {
     return linije;
 }
 
-
-app.put('/api/scenarios/:scenarioId/lines/:lineId', (req, res) => {
+app.put('/api/scenarios/:scenarioId/lines/:lineId', async(req, res) => {
     const scenarioId = parseInt(req.params.scenarioId);
     const lineId = parseInt(req.params.lineId);
     const { userId, newText } = req.body;
@@ -181,16 +197,18 @@ app.put('/api/scenarios/:scenarioId/lines/:lineId', (req, res) => {
         return res.status(400).json({ message: "Niz new_text ne smije biti prazan!" });
     }
 
-    const putanja = path.join(__dirname, 'data', 'scenarios', `scenario-${scenarioId}.json`);
-    if (!fs.existsSync(putanja)) {
+    try{
+
+    const scenario = await db.Scenario.findOne({ where: { id: scenarioId } });
+    if (!scenario) {
         return res.status(404).json({ message: "Scenario ne postoji!" });
     }
-
-    let scenario = JSON.parse(fs.readFileSync(putanja, 'utf8'));
     
-    // Pronađi indeks trenutne linije
-    const indexLinije = scenario.content.findIndex(l => l.lineId === lineId);
-    if (indexLinije === -1) {
+    //dohvatamo liniju iz baze
+    let trazenaLinija = await db.Line.findOne({ 
+        where: { scenarioId: scenarioId, lineId: lineId } 
+    });
+    if (!trazenaLinija) {
         return res.status(404).json({ message: "Linija ne postoji!" });
     }
     
@@ -205,13 +223,10 @@ app.put('/api/scenarios/:scenarioId/lines/:lineId', (req, res) => {
         return res.status(409).json({ message: "Linija je vec zakljucana!" });
     }
 
-    let trenutniObjekat = scenario.content[indexLinije];
-
     const stigaoJeIstiTekst = (newText.length === 1) && 
-                              (newText[0].trim() === trenutniObjekat.text.trim());
+                              (newText[0].trim() === trazenaLinija.text.trim());
 
     if (stigaoJeIstiTekst) {
-        
         // Samo otključaj liniju
         delete lockedLines[lockKey];
         if (userLocks[userId] === lockKey) {
@@ -226,222 +241,403 @@ app.put('/api/scenarios/:scenarioId/lines/:lineId', (req, res) => {
         konacniTekstovi.push(...prelomiTekst(stringLinija));
     });
 
-    let deltasToSave = [];
     const timestamp = Math.floor(Date.now() / 1000);
+    const originalNextId = trazenaLinija.nextLineId;
 
-    let maxId = 0;
-    scenario.content.forEach(l => { if (l.lineId > maxId) maxId = l.lineId; });
+    let maxIdResult = await db.Line.max('lineId', { where: { scenarioId: scenarioId } });
+    let maxId = maxIdResult || 0;
 
-    const originalNextId = trenutniObjekat.nextLineId;
+    let newNextLineIdForFirst = (konacniTekstovi.length > 1) ? (maxId + 1) : originalNextId;
 
-    // Ažuriranje PRVE linije
-    trenutniObjekat.text = konacniTekstovi[0];
-    
-    if (konacniTekstovi.length > 1) {
-        trenutniObjekat.nextLineId = maxId + 1; 
-    } else {
-        trenutniObjekat.nextLineId = originalNextId;
-    }
+        // UPDATE u bazi
+        await trazenaLinija.update({
+            text: konacniTekstovi[0],
+            nextLineId: newNextLineIdForFirst
+        });
 
-    deltasToSave.push({
-        scenarioId: scenarioId,
-        type: "line_update",
-        lineId: trenutniObjekat.lineId,
-        nextLineId: trenutniObjekat.nextLineId,
-        content: trenutniObjekat.text,
-        timestamp: timestamp
-    });
+    // SPASAVANJE DELTE za prvu liniju
+        await db.Delta.create({
+            scenarioId: scenarioId,
+            type: "line_update",
+            lineId: trazenaLinija.lineId,
+            nextLineId: newNextLineIdForFirst,
+            content: konacniTekstovi[0],
+            timestamp: timestamp
+        });
 
     // Kreiranje NOVIH linija
     for (let i = 1; i < konacniTekstovi.length; i++) {
         maxId++; 
         let nextIdZaNovu = (i < konacniTekstovi.length - 1) ? (maxId + 1) : originalNextId;
 
-        const novaLinija = {
-            lineId: maxId,
-            nextLineId: nextIdZaNovu,
-            text: konacniTekstovi[i]
-        };
+        // INSERT u bazu (Line)
+            await db.Line.create({
+                lineId: maxId,
+                text: konacniTekstovi[i],
+                nextLineId: nextIdZaNovu,
+                scenarioId: scenarioId
+            });
 
-        //scenario.content.push(novaLinija);
-        scenario.content.splice(indexLinije + i, 0, novaLinija);
-
-        deltasToSave.push({
-            scenarioId: scenarioId,
-            type: "line_update",
-            lineId: novaLinija.lineId,
-            nextLineId: novaLinija.nextLineId,
-            content: novaLinija.text,
-            timestamp: timestamp
-        });
+        // INSERT u bazu (Delta)
+            await db.Delta.create({
+                scenarioId: scenarioId,
+                type: "line_update",
+                lineId: maxId,
+                nextLineId: nextIdZaNovu,
+                content: konacniTekstovi[i],
+                timestamp: timestamp
+            });
     }
-
-    //cuvanje json objekata
-    fs.writeFileSync(putanja, JSON.stringify(scenario, null, 2));
-
-    const deltaFolder = path.join(__dirname, 'data'); 
-    const deltaPutanja = path.join(deltaFolder, 'deltas.json');
-    
-    let existingDeltas = [];
-    if (fs.existsSync(deltaPutanja)) {
-        try {
-            existingDeltas = JSON.parse(fs.readFileSync(deltaPutanja, 'utf8'));
-        } catch (e) { existingDeltas = []; }
-    }
-    
-    existingDeltas.push(...deltasToSave);
-    fs.writeFileSync(deltaPutanja, JSON.stringify(existingDeltas, null, 2));
-
-
     delete lockedLines[lockKey];
     if (userLocks[userId] === lockKey) {
         delete userLocks[userId];
     }
 
     res.status(200).json({ message: "Linija je uspjesno azurirana!" });
+    } catch (error) {
+        console.error("Greška pri updateu:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
 });
 
 const lockedCharacters = {};
-app.post('/api/scenarios/:scenarioId/characters/lock', (req, res) => {
+
+app.post('/api/scenarios/:scenarioId/characters/lock', async(req, res) => {
     const scenarioId = parseInt(req.params.scenarioId);
     const { userId, characterName } = req.body;
 
-    const putanja = path.join(__dirname, 'data', 'scenarios', `scenario-${scenarioId}.json`);
-    if (!fs.existsSync(putanja)) {
+    try{
+    const scenario = await db.Scenario.findOne({ where: { id: scenarioId } });
+    if (!scenario) {
         return res.status(404).json({ message: "Scenario ne postoji!" });
     }
 
-    // lljuč za zaključavanje je kombinacija scenarija i imena lika
+    //lljuč za zakljucavanje je kombinacija scenarija i imena lika
     const charLockKey = `${scenarioId}-${characterName}`;
 
-    // Provjera:
+    //provjera
     if (lockedCharacters[charLockKey] && lockedCharacters[charLockKey] !== userId) {
         return res.status(409).json({ message: "Konflikt! Ime lika je vec zakljucano!" });
     }
 
-    // Zaključaj lika (ili osvježi lock ako je isti user)
+    //zakljucaj lika (ili osvjezi lock ako je isti user)
     lockedCharacters[charLockKey] = userId;
 
     res.status(200).json({ message: "Ime lika je uspjesno zakljucano!" });
+    } catch (error) {
+        console.error("Greška pri zaključavanju:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
 });
 
-app.post('/api/scenarios/:scenarioId/characters/update', (req, res) => {
+
+app.post('/api/scenarios/:scenarioId/characters/update', async(req, res) => {
     const scenarioId = parseInt(req.params.scenarioId);
     const { userId, oldName, newName } = req.body;
 
-    const putanja = path.join(__dirname, 'data', 'scenarios', `scenario-${scenarioId}.json`);
-    if (!fs.existsSync(putanja)) {
+    try{
+    const scenario = await db.Scenario.findOne({ where: { id: scenarioId } });
+    if (!scenario) {
         return res.status(404).json({ message: "Scenario ne postoji!" });
     }
 
-    // Provjera da li korisnik ima pravo da mijenja (mora držati lock)
+    //provjera da li korisnik ima pravo da mijenja
     const charLockKey = `${scenarioId}-${oldName}`;
-    let scenario = JSON.parse(fs.readFileSync(putanja, 'utf8'));
-
-    const lineMap = new Map();
-    scenario.content.forEach(line => lineMap.set(line.lineId, line));
+    
+   const lines = await db.Line.findAll({ where: { scenarioId: scenarioId } });
 
     let promjeneNapravljene = false;
 
-    scenario.content.forEach(line => {
-        if (line.text === oldName) {
-            
-            // Regex provjera: Samo velika slova i razmaci, bez brojeva/interpunkcije
-            const isAllUppercaseLetters = /^[A-Z\s]+$/.test(line.text);
-            
-            if (isAllUppercaseLetters) {
-                // provjera sljedeće linije (nextLineId)
-                const nextLine = lineMap.get(line.nextLineId);
+    //format "IME: Tekst..." pa tražimo taj pattern
+    for (const line of lines) {
+            //provjeravamo da li linija počinje sa "STARO_IME:"
+            if (line.text.startsWith(oldName + ":")) {
                 
-                if (nextLine) {
-                    const nextText = nextLine.text.trim();
-                    const nextIsAllApps = /^[A-Z\s]+$/.test(nextLine.text); // Da li je i sljedeća ALL CAPS?
-                    
-                    // provjera sljedeća nije prazna i nije all Caps
-                    if (nextText.length > 0 && !nextIsAllApps) {
-                        // SVI USLOVI ISPUNJENI -> MIJENJAMO IME
-                        line.text = newName;
-                        promjeneNapravljene = true;
-                    }
-                }
+                //zamijeni prvo pojaljivanje starog imena novim
+                const noviTekst = line.text.replace(oldName + ":", newName + ":");
+                
+                //azuriraj objekt i spasi u bazu
+                line.text = noviTekst;
+                await line.save();
+                
+                promjeneNapravljene = true;
             }
         }
-    });
 
     if (promjeneNapravljene) {
-        fs.writeFileSync(putanja, JSON.stringify(scenario, null, 2));
-        const deltaFolder = path.join(__dirname, 'data');
-        const deltaPutanja = path.join(deltaFolder, 'deltas.json');
-        
-        const noviDeltaZapis = {
-            type: "char_rename",
-            oldName: oldName,
-            newName: newName,
-            timestamp: Math.floor(Date.now() / 1000)
-        };
-
-        let deltas = [];
-        if (fs.existsSync(deltaPutanja)) {
-            try {
-                deltas = JSON.parse(fs.readFileSync(deltaPutanja, 'utf8'));
-            } catch (e) { deltas = []; }
-        }
-        deltas.push(noviDeltaZapis);
-        fs.writeFileSync(deltaPutanja, JSON.stringify(deltas, null, 2));
+        await db.Delta.create({
+                scenarioId: scenarioId,
+                type: "char_rename",
+                oldName: oldName,
+                newName: newName,
+                timestamp: Math.floor(Date.now() / 1000)
+            });
     }
     // Otključaj lika nakon izmjene
     delete lockedCharacters[charLockKey];
 
     res.status(200).json({ message: "Ime lika je uspjesno promijenjeno!" });
+    } catch (error) {
+        console.error("Greška pri preimenovanju lika:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
 });
 
-app.get('/api/scenarios/:scenarioId/deltas', (req, res) => {
+app.get('/api/scenarios/:scenarioId/deltas', async(req, res) => {
     const scenarioId = parseInt(req.params.scenarioId);
     const sinceTimestamp = parseInt(req.query.since) || 0; 
 
-    // Putanje
-    const putanjaDoScenarija = path.join(__dirname, 'data', 'scenarios', `scenario-${scenarioId}.json`);
-    const putanjaDoDelti = path.join(__dirname, 'data', 'deltas.json');
+    try{
     
     // Provjera scenarija
-    if (!fs.existsSync(putanjaDoScenarija)) {
+    const scenario = await db.Scenario.findOne({ where: { id: scenarioId } });
+    if (!scenario) {
         return res.status(404).json({ message: "Scenario ne postoji!" });
     }
 
-    let allDeltas = [];
-    try {
-        if (fs.existsSync(putanjaDoDelti)) {
-            const data = fs.readFileSync(putanjaDoDelti, 'utf8');
-            if (data.trim().length > 0) {
-                allDeltas = JSON.parse(data);
+    const deltas = await db.Delta.findAll({
+            where: {
+                timestamp: { [Op.gt]: sinceTimestamp }, // Vrijeme > since
+                [Op.or]: [
+                    { scenarioId: scenarioId },
+                    { type: 'char_rename' }
+                ]
+            },
+            order: [['timestamp', 'ASC']],
+            //uzmamo polja koja nam trebaju
+            attributes: ['type', 'lineId', 'nextLineId', 'content', 'oldName', 'newName', 'timestamp']
+        });
+
+    const cleanDeltas = deltas.map(d => {
+            const plainDelta = d.get({ plain: true }); //pretvara Sequelize objekat u obicni JSON
+
+            //ako je tip line_update, brisemo polja za rename
+            if (plainDelta.type === 'line_update') {
+                delete plainDelta.oldName;
+                delete plainDelta.newName;
             }
-        }
-    } catch (err) {
-        console.error("Greška pri čitanju deltas.json:", err);
-        allDeltas = [];
-    }
+            //ako je char_rename, brisemo polja za linije
+            else if (plainDelta.type === 'char_rename') {
+                delete plainDelta.lineId;
+                delete plainDelta.nextLineId;
+                delete plainDelta.content;
+            }
+            return plainDelta;
+        });
 
-    const filteredDeltas = allDeltas.filter(delta => {
-        // prvo provjeri timestamp (vrijedi za sve)
-        if (delta.timestamp <= sinceTimestamp) {
-            return false;
-        }
-
-        if (delta.type === 'char_rename') {
-            return true;
-        }
-     return delta.scenarioId === scenarioId;
-    });
-
-    // Sortiranje
-    filteredDeltas.sort((a, b) => a.timestamp - b.timestamp);
-
-    // Slanje odgovora
+    //slanje odgovora
     res.status(200).json({
-        deltas: filteredDeltas
+        deltas: cleanDeltas
     });
+    } catch (error) {
+        console.error("Greška pri dohvatanju delti:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server radi na http://localhost:${PORT}/projects.html`); //eh
+//NOVE RUTEEE SPIRALA4
+app.post('/api/scenarios/:scenarioId/checkpoint', async (req, res) => {
+    const scenarioId = parseInt(req.params.scenarioId);
+
+    try {
+        //provjera da li scenario uopšte postoji
+        const scenario = await db.Scenario.findOne({ where: { id: scenarioId } });
+        if (!scenario) {
+            return res.status(404).json({ message: "Scenario ne postoji!" });
+        }
+        //kreiranje checkpointa
+        const timestamp = Math.floor(Date.now() / 1000);
+
+        await db.Checkpoint.create({
+            scenarioId: scenarioId,
+            timestamp: timestamp
+        });
+        res.status(200).json({ message: "Checkpoint je uspjesno kreiran!" });
+
+    } catch (error) {
+        console.error("Greška pri kreiranju checkpointa:", error);
+        res.status(500).json({ message: "Greška na serveru pri kreiranju checkpointa." });
+    }
+});
+
+app.get('/api/scenarios/:scenarioId/checkpoints', async (req, res) => {
+    const scenarioId = parseInt(req.params.scenarioId);
+
+    try {
+        //provjera da li scenario postoji u bazi
+        const scenario = await db.Scenario.findOne({ where: { id: scenarioId } });
+        if (!scenario) {
+            return res.status(404).json({ message: "Scenario ne postoji!" });
+        }
+
+        //dohvatanje svih checkpointa
+        const checkpoints = await db.Checkpoint.findAll({
+            where: { scenarioId: scenarioId },
+            attributes: ['id', 'timestamp']
+        });
+
+        res.status(200).json(checkpoints);
+
+    } catch (error) {
+        console.error("Greška pri dohvaćanju checkpointa:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
+});
+app.get('/api/scenarios/:scenarioId/restore/:checkpointId', async (req, res) => {
+    const scenarioId = parseInt(req.params.scenarioId);
+    const checkpointId = parseInt(req.params.checkpointId);
+
+    try {
+        //dohvatiti timestamp za checkpointId
+        const checkpoint = await db.Checkpoint.findOne({ 
+            where: { id: checkpointId, scenarioId: scenarioId } 
+        });
+        if (!checkpoint) {
+            return res.status(404).json({ message: "Checkpoint ne postoji!" });
+        }
+
+        //uzeti pocetno stanje scenarija
+        const scenario = await db.Scenario.findByPk(scenarioId);
+        if (!scenario) {
+            return res.status(404).json({ message: "Scenario ne postoji!" });
+        }
+
+        //dohvatamo linije koje pripadaju scenariju
+        const pocetneLinije = await db.Line.findAll({
+            where: { scenarioId: scenarioId },
+            raw: true
+        });
+
+        let stanje = {};
+        pocetneLinije.forEach(l => {
+            stanje[l.lineId] = {
+                lineId: l.lineId,
+                nextLineId: l.nextLineId,
+                text: l.text
+            };
+        });
+
+        //dohvatiti delte (timestamp <= checkpoint)
+        const delte = await db.Delta.findAll({
+            where: {
+                scenarioId: scenarioId,
+                timestamp: { [Op.lte]: checkpoint.timestamp }
+            },
+            order: [['timestamp', 'ASC'], ['id', 'ASC']]
+        });
+
+        //primijeniti delte na pocetno stanje
+        delte.forEach(delta => {
+            stanje[delta.lineId] = {
+                lineId: delta.lineId,
+                nextLineId: delta.nextLineId,
+                text: delta.content 
+            };
+        });
+
+        //pretvaranje mape nazad u niz za JSON odgovor
+        const finalniContent = Object.values(stanje);
+        res.status(200).json({
+            id: scenario.id,
+            title: scenario.title, 
+            content: finalniContent
+        });
+
+    } catch (error) {
+        console.error("Greška pri restore-u:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
+});
+
+
+const db = require('./data/db.js');
+
+async function initializeDatabase() {
+    //podaci za delte
+    const testDeltas = [
+        { scenarioId: 1, type: "line_update", lineId: 1, nextLineId: 2, content: "NARATOR: Sunce je polako zalazilo nad starim gradom.", timestamp: 1736520000 },
+        { scenarioId: 1, type: "line_update", lineId: 2, nextLineId: 3, content: "ALICE: Jesi li siguran da je ključ ostao u biblioteci?", timestamp: 1736520010 },
+        { scenarioId: 1, type: "line_update", lineId: 3, nextLineId: 4, content: "BOB: To je posljednje mjesto gdje sam ga vidio prije nego što je pala noć.", timestamp: 1736520020 },
+        { scenarioId: 1, type: "line_update", lineId: 4, nextLineId: 5, content: "ALICE: Moramo požuriti prije nego što čuvar zaključa glavna vrata.", timestamp: 1736520030 },
+        { scenarioId: 1, type: "line_update", lineId: 5, nextLineId: 6, content: "BOB: Čekaj, čuješ li taj zvuk iza polica?", timestamp: 1736520040 },
+        { scenarioId: 1, type: "line_update", lineId: 6, nextLineId: null, content: "NARATOR: Iz sjene se polako pojavila nepoznata figura.", timestamp: 1736520050 },
+        { scenarioId: 1, type: "char_rename", oldName: "BOB", newName: "ROBERT", timestamp: 1736520100 },
+        { scenarioId: 1, type: "line_update", lineId: 3, nextLineId: 7, content: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ", timestamp: 1768208370 },
+        { scenarioId: 1, type: "line_update", lineId: 7, nextLineId: 8, content: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ", timestamp: 1768208370 },
+        { scenarioId: 1, type: "line_update", lineId: 8, nextLineId: 4, content: "riječ riječ riječ riječ riječ", timestamp: 1768208370 },
+        { scenarioId: 1, type: "line_update", lineId: 3, nextLineId: 9, content: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ", timestamp: 1768422623 },
+        { scenarioId: 1, type: "line_update", lineId: 9, nextLineId: 10, content: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ", timestamp: 1768422623 },
+        { scenarioId: 1, type: "line_update", lineId: 10, nextLineId: 7, content: "riječ riječ riječ riječ riječ", timestamp: 1768422623 },
+        { scenarioId: 1, type: "line_update", lineId: 3, nextLineId: 11, content: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ", timestamp: 1768422736 },
+        { scenarioId: 1, type: "line_update", lineId: 11, nextLineId: 12, content: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ", timestamp: 1768422736 },
+        { scenarioId: 1, type: "line_update", lineId: 12, nextLineId: 9, content: "riječ riječ riječ riječ riječ", timestamp: 1768422736 },
+        { scenarioId: 1, type: "line_update", lineId: 3, nextLineId: 13, content: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ", timestamp: 1768423005 },
+        { scenarioId: 1, type: "line_update", lineId: 13, nextLineId: 14, content: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ", timestamp: 1768423005 },
+        { scenarioId: 1, type: "line_update", lineId: 14, nextLineId: 11, content: "riječ riječ riječ riječ riječ", timestamp: 1768423005 }
+    ];
+
+    // podaci za linije
+    const finalneLinije = [
+        { lineId: 1, nextLineId: 2, text: "NARATOR: Sunce je polako zalazilo nad starim gradom." },
+        { lineId: 2, nextLineId: 3, text: "ALICE: Jesi li siguran da je ključ ostao u biblioteci?" },
+        { lineId: 3, nextLineId: 13, text: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ" },
+        { lineId: 13, nextLineId: 14, text: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ" },
+        { lineId: 14, nextLineId: 11, text: "riječ riječ riječ riječ riječ" },
+        { lineId: 11, nextLineId: 12, text: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ" },
+        { lineId: 12, nextLineId: 9, text: "riječ riječ riječ riječ riječ" },
+        { lineId: 9, nextLineId: 10, text: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ" },
+        { lineId: 10, nextLineId: 7, text: "riječ riječ riječ riječ riječ" },
+        { lineId: 7, nextLineId: 8, text: "riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ riječ" },
+        { lineId: 8, nextLineId: 4, text: "riječ riječ riječ riječ riječ" },
+        { lineId: 4, nextLineId: 5, text: "ALICE: Moramo požuriti prije nego što čuvar zaključa glavna vrata." },
+        { lineId: 5, nextLineId: 6, text: "BOB: Čekaj, čuješ li taj zvuk iza polica?" },
+        { lineId: 6, nextLineId: null, text: "NARATOR: Iz sjene se polako pojavila nepoznata figura." }
+    ];
+
+    try {
+        //kreiranje scenarija iz testnog scenarija
+        const s1 = await db.Scenario.create({
+            title: "Potraga za izgubljenim ključem"
+        });
+
+        //ubacivanje linija testnog scenarija
+        for (const linija of finalneLinije) {
+            await db.Line.create({
+                lineId: linija.lineId,
+                text: linija.text,
+                nextLineId: linija.nextLineId,
+                scenarioId: s1.id
+            });
+        }
+
+        //ubacivanje delta
+        for (const delta of testDeltas) {
+            await db.Delta.create({
+                scenarioId: s1.id,
+                type: delta.type,
+                lineId: delta.lineId || null,
+                nextLineId: delta.nextLineId || null,
+                content: delta.content || null,
+                oldName: delta.oldName || null,
+                newName: delta.newName || null,
+                timestamp: delta.timestamp
+            });
+        }
+        console.log("Inicijalni podaci su uspješno ubačeni!");
+
+    } catch (e) {
+        console.error("Greška pri inicijalizaciji podataka:", e);
+    }
+}
+
+db.sequelize.sync({ force: true }).then(async () => {
+    console.log("Tabele su uspješno kreirane!");
+    await initializeDatabase();
+
+    const PORT = 3000;
+    app.listen(PORT, () => {
+        console.log(`Server radi na http://localhost:${PORT}/projects.html`);
+    });
+}).catch((err) => {
+    console.error("Greška pri sinhronizaciji baze:", err);
 });
