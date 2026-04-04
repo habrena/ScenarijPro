@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 //const fs = require('fs');
+const bcrypt = require('bcrypt');
 
 const { Op } = require("sequelize");
 
@@ -16,11 +17,14 @@ const lockedLines = {};
 // ovo nam treba da znamo sta user vec drzi da bismo to otkljucali
 const userLocks = {};
 
-
+/*
 app.post('/api/scenarios', async (req, res)=>{
     // priprema naslova
     let naslov = req.body.title;
-    if (!naslov || naslov.trim() === "") {naslov="Neimenovani scenarij";}
+    const userId = req.body.userId; 
+
+    if (!naslov || naslov.trim() === "") { naslov = "Neimenovani scenarij"; }
+    if (!userId) { return res.status(400).json({ message: "Korisnik nije identifikovan!" }); }
 
     try {
         //kreiranje scenarija u bazi
@@ -33,6 +37,12 @@ app.post('/api/scenarios', async (req, res)=>{
             nextLineId: null,
             scenarioId: noviScenario.id //veza sa scenarijem
         });
+        const korisnik = await db.User.findByPk(userId);
+            if (korisnik) {
+                await korisnik.addScenario(noviScenario, { through: { role: 'owner' } });
+            } else {
+                return res.status(404).json({ message: "Korisnik ne postoji u bazi!" });
+            }
         const odgovor = {
             id: noviScenario.id,
             title: noviScenario.title,
@@ -51,7 +61,47 @@ app.post('/api/scenarios', async (req, res)=>{
         res.status(500).json({ message: "Greška prilikom kreiranja scenarija." });
     }
 });
+*/
+app.post('/api/scenarios', async (req, res) => {
+    let naslov = req.body.title || "Neimenovani scenarij";
+    const userId = req.body.userId;
 
+    try {
+        // 1. Kreiraj scenario
+        const noviScenario = await db.Scenario.create({ title: naslov });
+
+        // 2. Kreiraj prvu liniju
+        // lineId je 1 (prva u scenariju)
+        // nextLineId je null (jer nema linije poslije nje)
+        const novaLinija = await db.Line.create({
+            lineId: 1, 
+            text: "",
+            nextLineId: null, 
+            scenarioId: noviScenario.id
+        });
+
+        // 3. Poveži vlasnika
+        const korisnik = await db.User.findByPk(userId);
+        if (korisnik) {
+            await korisnik.addScenario(noviScenario, { through: { role: 'owner' } });
+        }
+
+        // 4. Vrati podatke koji uključuju lanac
+        res.status(200).json({
+            id: noviScenario.id,
+            title: noviScenario.title,
+            content: [{
+                lineId: novaLinija.lineId,
+                text: novaLinija.text,
+                nextLineId: novaLinija.nextLineId // Vraća null
+            }]
+        });
+
+    } catch (error) {
+        console.error("Greška:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ruta koja cita scenarij na osnovu ida
@@ -435,7 +485,6 @@ app.get('/api/scenarios/:scenarioId/deltas', async(req, res) => {
     }
 });
 
-//NOVE RUTEEE SPIRALA4
 app.post('/api/scenarios/:scenarioId/checkpoint', async (req, res) => {
     const scenarioId = parseInt(req.params.scenarioId);
 
@@ -552,6 +601,135 @@ app.get('/api/scenarios/:scenarioId/restore/:checkpointId', async (req, res) => 
 
 const db = require('./data/db.js');
 
+// server.js (dio za registraciju)
+app.post('/api/register', async (req, res) => {
+    try {
+        // 1. Kreiraj korisnika (tvoj postojeći kod)
+        const noviKorisnik = await db.User.create(req.body);
+
+        // 2. Kreiraj automatski scenario za tog korisnika
+        const pocetniScenario = await db.Scenario.create({
+            title: "Moj prvi scenario"
+        });
+
+        // 3. Poveži korisnika i scenario (Role: owner)
+        await noviKorisnik.addScenario(pocetniScenario, { through: { role: 'owner' } });
+
+        // --- KLJUČNI DIO KOJI TI NEDOSTAJE ---
+        // 4. Ubaci nultu (prvu) liniju u bazu odmah
+        await db.Line.create({
+            lineId: 1,           // Redni broj 1
+            text: "",            // Prazan string (korisnik će ovo editovati)
+            nextLineId: null,    // Nema sljedeće linije još uvijek
+            scenarioId: pocetniScenario.id
+        });
+        // -------------------------------------
+
+        res.status(201).json({ message: "Registracija uspješna i scenario kreiran!" });
+    } catch (error) {
+        console.error("Greška pri registraciji:", error);
+        res.status(500).send("Greška na serveru.");
+    }
+});
+/*
+app.post('/api/register', async (req, res) => {
+    try {
+        const { ime, email, sifra, frequency} = req.body;
+        
+        if (!sifra) {
+            return res.status(400).json({ message: "Lozinka je obavezna za registraciju!" });
+        }
+
+        //provjera
+        const postojeciKorisnik = await db.User.findOne({ where: { email: email } });
+        
+        if (postojeciKorisnik) {
+            return res.status(400).json({ message: "Korisnik s tim emailom već postoji." });
+        }
+
+        //hash
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(sifra, salt);
+
+        //Kreiranje korisnika
+        const noviKorisnik = await db.User.create({
+            fullName: ime,
+            email: email,
+            password: hashedPassword,
+            notifFrequency: frequency
+        });
+
+        const pocetniScenario = await db.Scenario.create({
+            title: "Moj prvi projekt - " + ime
+        });
+
+        await noviKorisnik.addScenario(pocetniScenario, { through: { role: 'owner' } });
+
+        res.status(200).json({ 
+            message: "Uspješna registracija!", 
+            userId: noviKorisnik.id 
+        });
+
+    } catch (error) {
+        console.error("Greška na backendu:", error);
+        res.status(500).json({ message: "Došlo je do greške prilikom spremanja." });
+    }
+});
+*/
+
+// Ruta koja vraća sve scenarije za određenog korisnika
+app.get('/api/users/:userId/scenarios', async (req, res) => {
+    const userId = parseInt(req.params.userId);
+
+    try {
+        // Tražimo korisnika i uključujemo njegove scenarije kroz međutabelu
+        const korisnik = await db.User.findByPk(userId, {
+            include: [{
+                model: db.Scenario,
+                through: { attributes: [] } // Ne trebaju nam podaci iz međutabele, samo scenariji
+            }]
+        });
+
+        if (!korisnik) {
+            return res.status(404).json({ message: "Korisnik nije pronađen!" });
+        }
+
+        // Vraćamo samo niz scenarija
+        res.status(200).json(korisnik.Scenarios);
+    } catch (error) {
+        console.error("Greška pri dohvatanju projekata:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
+});
+
+app.post('/api/login', async (req, res) => {
+    const { email, sifra } = req.body;
+
+    try {
+        const korisnik = await db.User.findOne({ where: { email: email } });
+
+        if (!korisnik) {
+            return res.status(401).json({ message: "Korisnik ne postoji." });
+        }
+
+        const lozinkaTacna = await bcrypt.compare(sifra, korisnik.password);
+
+        if (!lozinkaTacna) {
+            return res.status(401).json({ message: "Pogrešna lozinka." });
+        }
+        res.status(200).json({
+            message: "Uspješna prijava!",
+            userId: korisnik.id,
+            fullName: korisnik.fullName
+        });
+
+    } catch (error) {
+        console.error("Greška pri loginu:", error);
+        res.status(500).json({ message: "Greška na serveru." });
+    }
+});
+
+//zaista nepotrebno
 async function initializeDatabase() {
     //podaci za delte
     const testDeltas = [
@@ -630,9 +808,9 @@ async function initializeDatabase() {
     }
 }
 
-db.sequelize.sync({ force: true }).then(async () => {
+db.sequelize.sync({ alter: true }).then(async () => {
     console.log("Tabele su uspješno kreirane!");
-    await initializeDatabase();
+    //await initializeDatabase();
 
     const PORT = 3000;
     app.listen(PORT, () => {

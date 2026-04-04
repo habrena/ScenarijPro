@@ -1,6 +1,6 @@
 const { Sequelize} = require("sequelize");
 
-const sequelize = new Sequelize("wt26", "root", "password", { 
+const sequelize = new Sequelize("wt26", "root", "", { 
     host: "localhost",
     dialect: "mysql",
     logging: false, 
@@ -95,6 +95,51 @@ const Checkpoint = sequelize.define("Checkpoint", {
     timestamps: false 
 });
 
+//definiranje User modela
+const User = sequelize.define("User", {
+    id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    fullName: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true, 
+        validate: {
+            isEmail: true 
+        }
+    },
+    password: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    notifFrequency: {
+        type: Sequelize.STRING,
+        allowNull: true
+    }
+}, {
+    timestamps: true 
+});
+
+const UserScenario = sequelize.define("UserScenario", {
+    id: { 
+        type: Sequelize.INTEGER, 
+        primaryKey: true, 
+        autoIncrement: true 
+    },
+    role: { 
+        type: Sequelize.STRING, 
+        defaultValue: "owner" 
+    } // Opcionalno: npr. vlasnik ili urednik
+}, { 
+    timestamps: false 
+});
+
 //relacije
 Scenario.hasMany(Line, { foreignKey: 'scenarioId', onDelete: 'CASCADE' });
 Line.belongsTo(Scenario, { foreignKey: 'scenarioId' });
@@ -105,10 +150,15 @@ Delta.belongsTo(Scenario, { foreignKey: 'scenarioId' });
 Scenario.hasMany(Checkpoint, { foreignKey: 'scenarioId', onDelete: 'CASCADE' });
 Checkpoint.belongsTo(Scenario, { foreignKey: 'scenarioId' });
 
+User.belongsToMany(Scenario, { through: UserScenario, foreignKey: 'userId' });
+Scenario.belongsToMany(User, { through: UserScenario, foreignKey: 'scenarioId' });
+
 module.exports = {
     sequelize,
     Scenario,
     Line,
     Delta,
-    Checkpoint
+    Checkpoint,
+    User,
+    UserScenario
 };

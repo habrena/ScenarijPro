@@ -15,12 +15,6 @@
             <div class="sidebar-opcija" id="sidebar-opcija1">
                 <h4>Projekti</h4>
             </div>
-            <div class="sidebar-opcija" id="sidebar-opcija2">
-                <h4>Statistika</h4>
-            </div>
-            <div class="sidebar-opcija" id="sidebar-opcija3">
-                <h4>Postavke</h4>
-            </div>
         </div>
         <hr id="sidebar-linija">
         <div class="sidebar-user-mini-profil">
@@ -41,27 +35,6 @@
             </div>
             
             <div id="mreza">
-                <div class="kartica active" id="kartica1" onclick="window.location.href='writing.html?id=1'">
-                    <div class="kartica-zaglavlje">
-                        <div class="kartica-zaglavlje-gornjaLinija">
-                            <h4 id="naslov-scenarija">NASLOV SCENARIJA</h4>
-                            <div class="aktivnaKartica" >Aktivan</div>
-                        </div>
-                    </div>
-                    <div class="kartica-mini-container">
-                        <div class="kartica-mini-container-linija">
-                            <p class="kartica-mini-title" >Status: </p><p id="statusId1">broj scenarija</p>
-                        </div>
-                        <div class="kartica-mini-container-linija">
-                            <p class="kartica-mini-title">Pages: </p><p id="broj-linija-1">0</p>
-                        </div>
-                        <div class="kartica-mini-container-linija">
-                            <p class="kartica-mini-title">Last Edit: </p>
-                            <p><span id="last-edit-1">Učitavanje...</span></p>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="kartica add-card" id="card-new">
                     <div id="view-initial" onclick="prikaziUnos()" style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
                         <h4>+</h4>
@@ -82,30 +55,7 @@
     <script>
         // Logika za učitavanje podataka o scenariju (Naslov)
         const kartica = document.getElementById('kartica1');
-        
-        PoziviAjaxFetch.getScenario(1, (status, data) => {
-            if (status === 200) {
-                console.log("Stigli podaci:", data);
-
-                const samoNaslov = document.getElementById('naslov-scenarija');
-                const statusKartice=document.getElementById('statusId1');
-                const elementBrojLinija = document.getElementById('broj-linija-1');
-                // Provjeravamo da li element postoji i da li su podaci stigli
-                if (samoNaslov && data.title) {
-                    samoNaslov.innerText = data.title; 
-                }
-                if(statusKartice && data.id){
-                    statusKartice.innerText=data.id;
-                }
-                if (elementBrojLinija) {
-                    // Provjeravamo da li postoji data.content i da li je niz
-                    const brojLinija = (data.content && Array.isArray(data.content)) ? data.content.length : 0;
-                    elementBrojLinija.innerText = brojLinija;
-                }
-            } else {
-                console.error("Greška pri učitavanju: " + (data.message || status));
-            }
-        });
+       
 
     document.addEventListener("DOMContentLoaded", () => {
         osvjeziVrijemeZadnjeIzmjene(1, "last-edit-1");
@@ -179,9 +129,16 @@ function sacuvajNovi(event) {
     const naslovInput = document.getElementById("novi-naslov");
     const naslov = naslovInput.value;
 
+    const trenutniUserId = localStorage.getItem('trenutniUserId');
+    if (!trenutniUserId) {
+        alert("Greška: Korisnik nije prijavljen!");
+        return;
+    }
+    if (!naslov) return alert("Unesite naslov!");
+
     PoziviAjaxFetch.postScenario(naslov, (status, data) => {
         if (status === 200) {
-            console.log("Kreirano:", data);
+            console.log("Scenario uspješno kreiran i povezan!");
             ponistiUnos();
             dodajKarticuNaEkran(data);
         } else {
@@ -191,19 +148,27 @@ function sacuvajNovi(event) {
 }
 
 function dodajKarticuNaEkran(scenarij) {
-    const div2 = document.createElement("div");
-    div2.className = "kartica";
-            
-    div2.onclick = function() {
+    const container1 = document.getElementById("mreza");
+    const addCard1 = document.getElementById("card-new");
+
+    const novaKartica = document.createElement("div");
+    novaKartica.className = "kartica active"; 
+    novaKartica.id = `kartica-${scenarij.id}`;
+    
+    // Klik na karticu vodi na editor (writing.html)
+    novaKartica.onclick = function() {
+        localStorage.setItem('trenutniScenarioId', scenarij.id);
         window.location.href = `writing.html?id=${scenarij.id}`;
     };
 
-    div2.innerHTML = `
+    // Dinamički računamo broj linija (ako su podaci dostupni)
+    //const brojLinija = (scenarij.Lines) ? scenarij.Lines.length : 0;
+    novaKartica.innerHTML = `
         <div class="kartica-zaglavlje">
             <div class="kartica-zaglavlje-gornjaLinija">
                 <h4>${scenarij.title}</h4>
             </div>
-            <p>Novi scenarij</p>
+            <p>ID projekta: ${scenarij.id}</p>
         </div>
         <div class="kartica-mini-container">
             <div class="kartica-mini-container-linija">
@@ -217,10 +182,57 @@ function dodajKarticuNaEkran(scenarij) {
             </div>
         </div>
     `;
+    container1.insertBefore(novaKartica, addCard1);
 
-    const container = document.getElementById("mreza");
-    const addCard = document.getElementById("card-new");
-    container.insertBefore(div2, addCard);
+    // Odmah pokreni učitavanje zadnje izmjene za ovu karticu
+    osvjeziVrijemeZadnjeIzmjene(scenarij.id, `edit-${scenarij.id}`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('trenutniUserId');
+    const listaProjekata = document.getElementById('listaProjekata'); // Pretpostavljam da imaš neki div ili ul s ovim ID-em
+
+    if (!userId) {
+        alert("Niste prijavljeni!");
+        window.location.href = 'login.html';
+        return;
+    }
+    const ikona = document.getElementById('ikona');
+    const imeUsera = document.querySelector('.sidebar-user-mini-profil-tekst h5');
+    const userName = localStorage.getItem('trenutnoIme') || 'Korisnik';
+    if (ikona) ikona.innerText = userName.charAt(0).toUpperCase();
+
+    ucitajSveScenarije(userId);
+
+});
+function ucitajSveScenarije(userId) {
+    const mreza = document.getElementById('mreza');
+    const addCard = document.getElementById('card-new');
+
+    // Brišemo sve stare kartice osim one za dodavanje novog
+    const trenutneKartice = mreza.querySelectorAll('.kartica:not(.add-card)');
+    trenutneKartice.forEach(k => k.remove());
+
+    fetch(`/api/users/${userId}/scenarios`)
+        .then(res => res.json())
+        .then(scenariji => {
+            if (scenariji.length === 0) {
+                console.log("Korisnik nema scenarija.");
+                return;
+            }
+
+            // Za svaki scenario kreiramo karticu
+            scenariji.forEach(s => {
+                dodajKarticuNaEkran(s);
+            });
+        })
+        .catch(err => console.error("Greška pri dohvatanju:", err));
+}
+
+function otvoriScenario(id) {
+    // Spremi ID scenarija i idi na editor stranicu
+    localStorage.setItem('trenutniScenarioId', id);
+    window.location.href = 'editor.html';
 }
 </script>
 </body>

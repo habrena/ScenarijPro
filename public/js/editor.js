@@ -101,43 +101,117 @@ function prikaziPoruku(tekst) {
 
 //upotreba getScenario ajax funkcije
 // Definiramo funkciju da je možemo zvati više puta
+/*
 function ucitajScenario() {
     if (scenarioId) {
-        console.log("Tražim scenarij broj:", scenarioId);
-        
         PoziviAjaxFetch.getScenario(scenarioId, (status, data) => {
             if (status === 200) {
-                console.log("Stigli podaci:", data);
+                // ... (tvoj postojeći kod za naslov) ...
 
-                const naslovElement = document.getElementById("naslov-scenarija");
-                const sidebarElement1 = document.getElementById("sidebarTitle1");
-                
-                if (naslovElement && data.title) {
-                    naslovElement.innerText = data.title; 
-                }
-                if (sidebarElement1 && data.title) {
-                    sidebarElement1.innerText = data.title; 
-                }
-                
-                divEditor.innerHTML = ""; // Očisti stari tekst
-                
-                if (data.content) {
+                divEditor.innerHTML = ""; 
+
+                // IZMJENA OVDJE:
+                if (data.content && data.content.length > 0) {
+                    // Ako ima sadržaja, iscrtaj ga
                     data.content.forEach(linija => {
                         let p = document.createElement("p");
                         p.innerText = linija.text;
                         p.setAttribute("data-id", linija.lineId);
                         divEditor.appendChild(p);
                     });
-                } 
+                } else {
+                    // AKO JE SCENARIO PRAZAN (Novi projekt)
+                    console.log("Scenario je prazan. Kreiram početnu liniju...");
+                    
+                    let p = document.createElement("p");
+                    p.innerHTML = "&#x200B;"; // Nevidljivi karakter da bi p imao visinu
+                    p.setAttribute("data-id", "nova-1"); // Privremeni ID
+                    
+                    divEditor.appendChild(p);
+                    
+                    // Automatski aktiviraj tu liniju da korisnik može odmah pisati
+                    aktivirajLiniju(p); 
+                }
             } else {
                 prikaziPoruku("Greška pri učitavanju: " + (data.message || status));
             }
         });
-    } else {
-        prikaziPoruku("Nije odabran scenarij.");
     }
 }
+*/
+// writing.js
+function ucitajScenario() {
+    if (!scenarioId) return;
 
+    PoziviAjaxFetch.getScenario(scenarioId, (status, data) => {
+        if (status === 200) {
+            divEditor.innerHTML = ""; // Očisti editor
+
+            // Ako imamo linije u bazi (a sada ćemo imati bar jednu)
+            if (data.content && data.content.length > 0) {
+                data.content.forEach(linija => {
+                    let p = document.createElement("p");
+                    
+                    // BITNO: Ako je tekst prazan, stavi nevidljivi razmak (Zero Width Space)
+                    // Bez ovoga ne možeš kliknuti na prazan red!
+                    p.innerHTML = (linija.text === "" || linija.text === null) ? "&#x200B;" : linija.text;
+                    
+                    p.setAttribute("data-id", linija.lineId);
+                    divEditor.appendChild(p);
+                });
+            }
+        }
+    });
+}
+/*
+function ucitajScenario() {
+    if (scenarioId) {
+        PoziviAjaxFetch.getScenario(scenarioId, (status, data) => {
+            if (status === 200) {
+                // Postavljanje naslova
+                const naslovElement = document.getElementById("naslov-scenarija");
+                if (naslovElement && data.title) naslovElement.innerText = data.title;
+
+                divEditor.innerHTML = ""; // Očisti stari tekst
+
+                // Provjera sadržaja koji dolazi iz baze (API sada garantuje barem jednu liniju)
+                if (data.content && data.content.length > 0) {
+                    data.content.forEach(linija => {
+                        let p = document.createElement("p");
+                        
+                        // Koristimo innerHTML da podržimo formatiranje (bold/italic) i specijalne karaktere
+                        // Ako je tekst prazan, stavljamo nevidljivi razmak da kursor može stati u liniju
+                        p.innerHTML = (linija.text === "" || linija.text === null) ? "&#x200B;" : linija.text;
+                        
+                        // Postavljamo tvoj lineId (redni broj)
+                        p.setAttribute("data-id", linija.lineId);
+                        
+                        // Dodajemo i informaciju o nextLineId u dataset (biće null za zadnju liniju)
+                        if (linija.nextLineId) {
+                            p.setAttribute("data-next", linija.nextLineId);
+                        }
+                        
+                        divEditor.appendChild(p);
+                    });
+
+                    // Opcionalno: Ako je scenario tek kreiran (ima samo 1 praznu liniju), 
+                    // automatski je aktiviraj da korisnik odmah može pisati
+                    if (data.content.length === 1 && data.content[0].text === "") {
+                        aktivirajLiniju(divEditor.firstChild);
+                    }
+
+                } else {
+                    // Ovo se realno ne bi trebalo desiti ako API radi ispravno, 
+                    // ali ostavljamo kao sigurnosnu poruku
+                    prikaziPoruku("Scenario nema linija teksta.");
+                }
+            } else {
+                prikaziPoruku("Greška pri učitavanju: " + (data.message || status));
+            }
+        });
+    }
+}
+*/
 // poziv funkcije
 ucitajScenario();
 
@@ -219,7 +293,7 @@ function resetujSveLinije() {
     if (autoSaveTimer) clearTimeout(autoSaveTimer);
 }
 
-
+/*
 function spasiIOslobodi(linija) {
     if (linija.dataset.saving === "true") return;
     if (autoSaveTimer) clearTimeout(autoSaveTimer);
@@ -248,7 +322,57 @@ function spasiIOslobodi(linija) {
         }
     });
 }
+*/
+function spasiIOslobodi(linija) {
+    // 1. Dobavljanje ID-a i validacija
+    const rawId = linija.getAttribute('data-id');
+    const lineId = parseInt(rawId);
 
+    // IZMJENA: Ako ID nije broj, ne šalji zahtjev (sprečava NaN grešku u SQL-u)
+    if (isNaN(lineId)) {
+        console.warn("Linija nema validan numerički ID. Update otkazan.");
+        return;
+    }
+
+    if (linija.dataset.saving === "true") return;
+    if (autoSaveTimer) clearTimeout(autoSaveTimer);
+
+    // 2. Čišćenje teksta
+    // IZMJENA: Uklanjamo nevidljivi karakter (Zero Width Space) prije slanja u bazu
+    // Također koristimo .innerHTML da sačuvamo bold/italic tagove
+    let noviTekst = linija.innerHTML.replace(/\u200B/g, '');
+
+    linija.dataset.saving = "true";
+    linija.classList.add('saving-line');
+
+    // 3. AJAX poziv
+    PoziviAjaxFetch.updateLine(scenarioId, lineId, currentUserId, noviTekst, (status, data) => {
+        linija.dataset.saving = "false";
+        linija.classList.remove('saving-line');
+
+        if (status === 200) {
+            // USPJEH
+            linija.contentEditable = "false";
+            linija.classList.remove('active-line');
+            
+            // IZMJENA: Ako je korisnik obrisao sav tekst, vrati nevidljivi space 
+            // kako bi linija ostala klikabilna nakon što prestane editovanje
+            if (linija.innerHTML === "") {
+                linija.innerHTML = "&#x200B;";
+            }
+            
+            console.log("Uspješno snimljeno i oslobođeno.");
+        } else {
+            // GREŠKA
+            console.error("Nije uspjelo snimanje:", data);
+            linija.classList.add('error-line');
+            prikaziPoruku("Greška pri snimanju: " + (data.message || status));
+            
+            // Opcionalno: ukloni error klasu nakon par sekundi
+            setTimeout(() => linija.classList.remove('error-line'), 2000);
+        }
+    });
+}
 document.addEventListener("DOMContentLoaded", () => {
     const step1Div = document.getElementById('step-1-lock');
     const step2Div = document.getElementById('step-2-update');
@@ -406,3 +530,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
 });
+/*
+document.getElementById('dugmeSaveChanges').addEventListener('click', () => {
+    // 1. Prikupljamo samo ono što je ostalo
+    const imeVal = document.getElementById('ime').value;
+    const emailVal = document.getElementById('email').value;
+    const sifraVal = document.getElementById('sifra').value;
+    const frekvencijaVal = document.getElementById('opcije1').value;
+
+    // 2. Kreiramo userData bez contactMethod-a
+    const userData = {
+        ime: imeVal,
+        email: emailVal,
+        sifra: sifraVal,
+        frequency: frekvencijaVal
+    };
+
+    console.log("Šaljem pročišćene podatke:", userData);
+
+    // 3. Poziv AJAX-a ostaje isti
+    PoziviAjaxFetch.registrujKorisnika(userData, (status, data) => {
+        if (status === 200 || status === 201) {
+            localStorage.setItem('trenutniUserId', data.userId || data.id);
+            localStorage.setItem('trenutnoIme', userData.ime);
+            window.location.href = 'projects.html';
+        } else {
+            alert("Greška: " + (data.message || status));
+        }
+    });
+});*/

@@ -1,7 +1,9 @@
 const PoziviAjaxFetch = (function() {
 
-    function postScenario(title, callback) {
-        const podaci = { title: title };
+    function postScenario(title, userId, callback) {
+        const podaci = { title: title,
+            userId: userId
+        };
         fetch('/api/scenarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -95,6 +97,20 @@ const PoziviAjaxFetch = (function() {
                 callback(response.status, { message: "Greška pri parsiranju odgovora" });
             });
     }
+    function registrujKorisnika(data, callback){
+        fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fullName: data.ime, 
+                email: data.email,
+                sifra: data.sifra,
+                notifFrequency: data.frequency
+            })
+        })
+        .then(response => handleResponse(response, callback))
+        .catch(error => callback(500, { message: "Greška na mreži: " + error }));
+    }
 
     return {
         postScenario: postScenario,
@@ -103,6 +119,7 @@ const PoziviAjaxFetch = (function() {
         lockCharacter: lockCharacter,
         updateCharacter: updateCharacter,
         getDeltas: getDeltas,
-        getScenario: getScenario
+        getScenario: getScenario,
+        registrujKorisnika: registrujKorisnika
     };
 })();

@@ -29,11 +29,12 @@
                 <label for="email">Email adresa</label>
                 <input type="text" id="email" value="john.doe@example.com">
             </div>
-            
+            <!--
             <div class="form-grupa">
                 <label for="items">Broj elemenata po stranici (1-100)</label>
                 <input type="number" id="items" min="1" max="100" value="25">
             </div>
+        -->
         </div>
         
         <!-- Sigurnosne postavke -->
@@ -45,34 +46,17 @@
                 <input type="password" id="sifra" placeholder="********">    
             </div>
             <p class="hint">Ostavite prazno da zadržite trenutnu šifru.</p>
-            
+            <!--
             <div class="checkbox-container">
                 <input type="checkbox" id="2FA">
                 <label for="2FA">Omogući Two-Factor Authentication (2FA)</label>
             </div>
+        -->
         </div>
         
         <!-- Notifikacije -->
         <div id="notif-pref" class="section">
             <h4>Notifikacije</h4>
-            
-            <div class="form-grupa">
-                <label>Preferirani način komunikacije</label>
-                <div class="radio-grupa">
-                    <div class="radio-opcija">
-                        <input type="radio" id="contactMethod1" name="contactMethod" checked>
-                        <label for="contactMethod1">Email</label>
-                    </div>
-                    <div class="radio-opcija">
-                        <input type="radio" id="contactMethod2" name="contactMethod">
-                        <label for="contactMethod2">SMS (Text)</label>
-                    </div>
-                    <div class="radio-opcija">
-                        <input type="radio" id="contactMethod3" name="contactMethod">
-                        <label for="contactMethod3">None</label>
-                    </div>
-                </div>
-            </div>
             
             <div class="form-grupa">
                 <label for="opcije1">Notification Frequency</label>
@@ -90,5 +74,39 @@
             <input type="button" id="dugmeSaveChanges" value="Spremi promjene">
         </div>
     </div>
+    <script src="js/PoziviAjaxFetch.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const dugme = document.getElementById('dugmeSaveChanges');
+
+    if (dugme) {
+        dugme.addEventListener('click', function() {
+            const userData = {
+                ime: document.getElementById('ime').value,
+                email: document.getElementById('email').value,
+                sifra: document.getElementById('sifra').value,
+                frequency: document.getElementById('opcije1') ? document.getElementById('opcije1').value : "default"
+            };
+
+            console.log("Klik detektovan, šaljem:", userData);
+
+            if (typeof PoziviAjaxFetch !== 'undefined') {
+                PoziviAjaxFetch.registrujKorisnika(userData, (status, data) => {
+                    if (status === 200 || status === 201) {
+                        localStorage.setItem('trenutniUserId', data.userId || data.id);
+                        localStorage.setItem('trenutnoIme', userData.ime);
+                        window.location.href = 'projects.html';
+                    } else {
+                        alert("Greška: " + (data.message || status));
+                    }
+                });
+            } else {
+                console.error("PoziviAjaxFetch nije učitan! Provjeri putanju u src='js/PoziviAjaxFetch.js'");
+            }
+        });
+    }
+});
+</script>
 </body>
 </html>

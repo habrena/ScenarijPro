@@ -227,7 +227,7 @@ body {
 }
 
 
-/* Editor */
+/* Editor 
 #editor {
     flex: 1;
     background-color: #f8f9fa;
@@ -236,8 +236,27 @@ body {
      flex-direction: column;
     align-items: center;
     overflow-y: auto;
+}*/
+#editor {
+    flex: 1;
+    background-color: #f8f9fa;
+    padding: 20px; /* Smanji padding sa 40px na 20px da uštediš prostor */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden; /* ISKLJUČI skrol ovdje */
+    height: 100%;
+}
+#divEditor {
+    min-height: 500px; /* Da editor ne bude "spljošten" kad je prazan */
+    cursor: text;
 }
 
+/* Ako je potpuno prazan, dodaj vizuelni znak */
+#divEditor:empty::before {
+    content: "Kliknite ovdje da započnete scenario...";
+    color: #ccc;
+}
 .editor-sadrzaj {
     width: 100%;
     max-width: 700px;
