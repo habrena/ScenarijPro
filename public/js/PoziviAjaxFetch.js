@@ -104,7 +104,7 @@ const PoziviAjaxFetch = (function() {
             body: JSON.stringify({
                 fullName: data.ime, 
                 email: data.email,
-                sifra: data.sifra,
+                password: data.password,
                 notifFrequency: data.frequency
             })
         })

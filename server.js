@@ -63,37 +63,21 @@ app.post('/api/scenarios', async (req, res)=>{
 });
 */
 app.post('/api/scenarios', async (req, res) => {
+    //u requestu je samo title i userId
+    //da li je potrebno ovdje jos sta dodavati?
     let naslov = req.body.title || "Neimenovani scenarij";
     const userId = req.body.userId;
 
     try {
-        // 1. Kreiraj scenario
-        const noviScenario = await db.Scenario.create({ title: naslov });
-
-        // 2. Kreiraj prvu liniju
-        // lineId je 1 (prva u scenariju)
-        // nextLineId je null (jer nema linije poslije nje)
-        const novaLinija = await db.Line.create({
-            lineId: 1, 
-            text: "",
-            nextLineId: null, 
-            scenarioId: noviScenario.id
-        });
-
-        // 3. Poveži vlasnika
-        const korisnik = await db.User.findByPk(userId);
-        if (korisnik) {
-            await korisnik.addScenario(noviScenario, { through: { role: 'owner' } });
-        }
-
-        // 4. Vrati podatke koji uključuju lanac
+    
+        const noviScenNovaLinija=await napraviNoviScenario(db, naslov, userId);
         res.status(200).json({
-            id: noviScenario.id,
-            title: noviScenario.title,
+            id: noviScenNovaLinija.noviScenario.id,
+            title: noviScenNovaLinija.noviScenario.title,
             content: [{
-                lineId: novaLinija.lineId,
-                text: novaLinija.text,
-                nextLineId: novaLinija.nextLineId // Vraća null
+                lineId: noviScenNovaLinija.ovnovaLinija.lineId,
+                text: noviScenNovaLinija.novaLinija.text,
+                nextLineId: noviScenNovaLinija.novaLinija.nextLineId // Vraća null
             }]
         });
 
@@ -102,6 +86,26 @@ app.post('/api/scenarios', async (req, res) => {
         res.status(500).json({ message: "Greška na serveru." });
     }
 });
+
+const napraviNoviScenario=async (db, userId,title)=>{
+    const noviScenario=await db.Scenario.create({title});
+    const novaLinija = await db.Line.create({
+            lineId: 1, 
+            text: "",
+            nextLineId: null, 
+            scenarioId: noviScenario.id
+        });
+
+    const korisnik = await db.User.findByPk(userId);
+    if (!korisnik) {
+        throw new Error("Korisnik nije pronađen.");
+    }
+    
+    await korisnik.addScenario(noviScenario, { through: { role: 'owner' } });
+    return {noviScenario, novaLinija};
+
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ruta koja cita scenarij na osnovu ida
@@ -605,7 +609,28 @@ const db = require('./data/db.js');
 app.post('/api/register', async (req, res) => {
     try {
         // 1. Kreiraj korisnika (tvoj postojeći kod)
-        const noviKorisnik = await db.User.create(req.body);
+        //ovdje je greska
+        console.log("OVDJE:", req.body);
+        const { fullName, email, password, notifFrequency} = req.body;
+        if (!password) {
+            return res.status(400).json({ message: "Lozinka je obavezna za registraciju!" });
+        }
+
+        //provjera
+        const postojeciKorisnik = await db.User.findOne({ where: { email: email } });
+
+        if (postojeciKorisnik) {
+            return res.status(400).json({ message: "Korisnik s tim emailom već postoji." });
+        }
+
+        const noviKorisnik = await db.User.create({
+            fullName: fullName,
+            email: email,
+            password: password,
+            notifFrequency: notifFrequency
+        });
+        //ovdje je definitivno greska
+        //console.log("greska je u liniji iznad");
 
         // 2. Kreiraj automatski scenario za tog korisnika
         const pocetniScenario = await db.Scenario.create({
@@ -703,7 +728,7 @@ app.get('/api/users/:userId/scenarios', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-    const { email, sifra } = req.body;
+    const { email, password } = req.body;
 
     try {
         const korisnik = await db.User.findOne({ where: { email: email } });
@@ -712,7 +737,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: "Korisnik ne postoji." });
         }
 
-        const lozinkaTacna = await bcrypt.compare(sifra, korisnik.password);
+        const lozinkaTacna = await bcrypt.compare(password, korisnik.password);
 
         if (!lozinkaTacna) {
             return res.status(401).json({ message: "Pogrešna lozinka." });

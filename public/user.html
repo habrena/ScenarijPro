@@ -22,12 +22,12 @@
             
             <div class="form-grupa">
                 <label for="ime">Ime i prezime</label>
-                <input type="text" id="ime" value="John Doe">
+                <input type="text" id="ime" autocomplete="ime">
             </div>
             
             <div class="form-grupa">
                 <label for="email">Email adresa</label>
-                <input type="text" id="email" value="john.doe@example.com">
+                <input type="text" id="email" autocomplete="email">
             </div>
             <!--
             <div class="form-grupa">
@@ -42,8 +42,8 @@
             <h4>Sigurnosne postavke</h4>
             
             <div class="form-grupa">
-                <label for="sifra">Nova šifra</label>
-                <input type="password" id="sifra" placeholder="********">    
+                <label for="password">Nova šifra</label>
+                <input type="password" id="password" placeholder="********">    
             </div>
             <p class="hint">Ostavite prazno da zadržite trenutnu šifru.</p>
             <!--
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const userData = {
                 ime: document.getElementById('ime').value,
                 email: document.getElementById('email').value,
-                sifra: document.getElementById('sifra').value,
+                password: document.getElementById('password').value,
                 frequency: document.getElementById('opcije1') ? document.getElementById('opcije1').value : "default"
             };
 

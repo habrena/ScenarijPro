@@ -1,4 +1,5 @@
 const { Sequelize} = require("sequelize");
+const bcrypt = require('bcrypt');
 
 const sequelize = new Sequelize("wt26", "root", "", { 
     host: "localhost",
@@ -123,7 +124,23 @@ const User = sequelize.define("User", {
         allowNull: true
     }
 }, {
-    timestamps: true 
+    timestamps: true,
+    hooks: {
+        //genSaltSync je sinhrona verzija generiranja salta
+        //genSalt je asinhrona ver, ne zaustavlja rad citave stranice prilikom registracije
+        beforeCreate: async (user) => {
+            if (user.password) {
+            const salt = await bcrypt.genSalt(10, 'a');
+            user.password = await bcrypt.hash(user.password, salt);
+        }
+    },
+        beforeUpdate:async (user) => {
+            if (user.password) {
+            const salt = await bcrypt.genSalt(10, 'a');
+            user.password = await bcrypt.hash(user.password, salt);
+        }
+  }
+ }
 });
 
 const UserScenario = sequelize.define("UserScenario", {

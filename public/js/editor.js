@@ -218,6 +218,7 @@ ucitajScenario();
 //upotreba postScenario ajax funkcije
 function napraviNovi() {
     const naziv = document.getElementById("noviNaziv").value;
+    console.log("OVDJE JE NAPRAVLJEN DOKUMENT NOVINAZIV: ",noviNaziv.value);
 
     PoziviAjaxFetch.postScenario(naziv, (status, data) => {
         if (status === 200) {
