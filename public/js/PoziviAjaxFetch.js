@@ -111,6 +111,12 @@ const PoziviAjaxFetch = (function() {
         .then(response => handleResponse(response, callback))
         .catch(error => callback(500, { message: "Greška na mreži: " + error }));
     }
+    function dohvatiScenarijeKorisnika(data, callback){
+        fetch('api/users/')
+        .then(response => handleResponse(response, callback))
+        .catch(error => callback(500, { message: "Greška na mreži: " + error }));
+    
+    }
 
     return {
         postScenario: postScenario,
@@ -120,6 +126,7 @@ const PoziviAjaxFetch = (function() {
         updateCharacter: updateCharacter,
         getDeltas: getDeltas,
         getScenario: getScenario,
-        registrujKorisnika: registrujKorisnika
+        registrujKorisnika: registrujKorisnika,
+        dohvatiScenarijeKorisnika: dohvatiScenarijeKorisnika
     };
 })();

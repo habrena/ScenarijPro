@@ -605,10 +605,8 @@ app.get('/api/scenarios/:scenarioId/restore/:checkpointId', async (req, res) => 
 
 const db = require('./data/db.js');
 
-// server.js (dio za registraciju)
 app.post('/api/register', async (req, res) => {
     try {
-        // 1. Kreiraj korisnika (tvoj postojeći kod)
         //ovdje je greska
         console.log("OVDJE:", req.body);
         const { fullName, email, password, notifFrequency} = req.body;
@@ -629,28 +627,26 @@ app.post('/api/register', async (req, res) => {
             password: password,
             notifFrequency: notifFrequency
         });
-        //ovdje je definitivno greska
-        //console.log("greska je u liniji iznad");
 
-        // 2. Kreiraj automatski scenario za tog korisnika
         const pocetniScenario = await db.Scenario.create({
             title: "Moj prvi scenario"
         });
 
-        // 3. Poveži korisnika i scenario (Role: owner)
         await noviKorisnik.addScenario(pocetniScenario, { through: { role: 'owner' } });
 
-        // --- KLJUČNI DIO KOJI TI NEDOSTAJE ---
-        // 4. Ubaci nultu (prvu) liniju u bazu odmah
         await db.Line.create({
-            lineId: 1,           // Redni broj 1
-            text: "",            // Prazan string (korisnik će ovo editovati)
-            nextLineId: null,    // Nema sljedeće linije još uvijek
+            lineId: 1,         
+            text: "",           
+            nextLineId: null,  
             scenarioId: pocetniScenario.id
         });
-        // -------------------------------------
 
-        res.status(201).json({ message: "Registracija uspješna i scenario kreiran!" });
+        //res.status(201).json({ message: "Registracija uspješna i scenario kreiran!" });
+        res.status(201).json({ 
+            message: "Registracija uspješna i scenario kreiran!",
+            id: noviKorisnik.id, // OVO DODAJ DA BI FRONTEND MOGAO DA GA SPAŠI
+            fullName: noviKorisnik.fullName 
+        });
     } catch (error) {
         console.error("Greška pri registraciji:", error);
         res.status(500).send("Greška na serveru.");
@@ -702,12 +698,12 @@ app.post('/api/register', async (req, res) => {
 });
 */
 
-// Ruta koja vraća sve scenarije za određenog korisnika
+// ruta koja vraća sve scenarije za određenog korisnika
 app.get('/api/users/:userId/scenarios', async (req, res) => {
     const userId = parseInt(req.params.userId);
 
     try {
-        // Tražimo korisnika i uključujemo njegove scenarije kroz međutabelu
+        //tražimo korisnika i uključujemo njegove scenarije kroz međutabelu
         const korisnik = await db.User.findByPk(userId, {
             include: [{
                 model: db.Scenario,
@@ -719,7 +715,6 @@ app.get('/api/users/:userId/scenarios', async (req, res) => {
             return res.status(404).json({ message: "Korisnik nije pronađen!" });
         }
 
-        // Vraćamo samo niz scenarija
         res.status(200).json(korisnik.Scenarios);
     } catch (error) {
         console.error("Greška pri dohvatanju projekata:", error);

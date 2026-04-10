@@ -78,6 +78,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    console.log("Skripta je učitana!");
     const dugme = document.getElementById('dugmeSaveChanges');
 
     if (dugme) {
@@ -94,8 +95,9 @@ document.addEventListener("DOMContentLoaded", function() {
             if (typeof PoziviAjaxFetch !== 'undefined') {
                 PoziviAjaxFetch.registrujKorisnika(userData, (status, data) => {
                     if (status === 200 || status === 201) {
-                        localStorage.setItem('trenutniUserId', data.userId || data.id);
-                        localStorage.setItem('trenutnoIme', userData.ime);
+                        console.log("Odgovor servera:", data.message);
+                        localStorage.setItem('trenutniUserId', data.id);
+                        localStorage.setItem('trenutnoIme', data.fullName);
                         window.location.href = 'projects.html';
                     } else {
                         alert("Greška: " + (data.message || status));
