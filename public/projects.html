@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const ikona = document.getElementById('ikona');
     const imeUsera = document.querySelector('.sidebar-user-mini-profil-tekst h5');
-    const userName = localStorage.getItem('trenutnoIme') || 'Korisnik';
+    const userName = localStorage.getItem('trenutnoIme');// || 'Korisnik';
     if (ikona) ikona.innerText = userName.charAt(0).toUpperCase();
 
     ucitajSveScenarije(userId);

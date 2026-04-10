@@ -144,7 +144,18 @@ function ucitajScenario() {
     if (!scenarioId) return;
 
     PoziviAjaxFetch.getScenario(scenarioId, (status, data) => {
+        const titleElement = document.getElementById("naslov-scenarija");
+        const sideTitleElement = document.getElementById("sidebarTitle1");
+
+        if (!titleElement) {
+            console.error("Element #sidebarTitle1 nije pronađen u HTML-u!");
+            return;
+        }
+
         if (status === 200) {
+            titleElement.textContent = data.title; 
+            sideTitleElement.textContent = data.title; 
+        
             divEditor.innerHTML = ""; // Očisti editor
 
             // Ako imamo linije u bazi (a sada ćemo imati bar jednu)
@@ -160,6 +171,10 @@ function ucitajScenario() {
                     divEditor.appendChild(p);
                 });
             }
+        }else{
+            prikaziPoruku("Greska pri ucitavanju.");
+            titleElement.textContent = "Greška pri učitavanju";
+            sideTitleElement.textContent = "Greška pri učitavanju";
         }
     });
 }
