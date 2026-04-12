@@ -754,7 +754,7 @@ app.get('/api/users/:userId/scenarios', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, sifra } = req.body;
 
     try {
         const korisnik = await db.User.findOne({ where: { email: email } });
@@ -763,7 +763,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: "Korisnik ne postoji." });
         }
 
-        const lozinkaTacna = await bcrypt.compare(password, korisnik.password);
+        const lozinkaTacna = await bcrypt.compare(sifra, korisnik.password);
 
         if (!lozinkaTacna) {
             return res.status(401).json({ message: "Pogrešna lozinka." });
