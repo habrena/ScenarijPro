@@ -231,9 +231,9 @@ function ucitajScenario() {
 ucitajScenario();
 
 //upotreba postScenario ajax funkcije
-function napraviNovi() {
+/*function napraviNovi() {
     const naziv = document.getElementById("noviNaziv").value;
-    console.log("OVDJE JE NAPRAVLJEN DOKUMENT NOVINAZIV: ",noviNaziv.value);
+    console.log("OVDJE JE NAPRAVLJEN DOKUMENT NOVINAZIV: ", noviNaziv.value);
 
     PoziviAjaxFetch.postScenario(naziv, (status, data) => {
         if (status === 200) {
@@ -243,7 +243,7 @@ function napraviNovi() {
             alert("Greška: " + (data.message || status));
         }
     });
-}
+}*/
 
 
 divEditor.addEventListener('click', function(e) {

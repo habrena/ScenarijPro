@@ -136,7 +136,7 @@ function sacuvajNovi(event) {
     }
     if (!naslov) return alert("Unesite naslov!");
 
-    PoziviAjaxFetch.postScenario(naslov, (status, data) => {
+    PoziviAjaxFetch.postScenario(naslov, trenutniUserId, (status, data) => {
         if (status === 200) {
             console.log("Scenario uspješno kreiran i povezan!");
             ponistiUnos();

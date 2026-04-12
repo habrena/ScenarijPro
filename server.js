@@ -66,16 +66,19 @@ app.post('/api/scenarios', async (req, res) => {
     //u requestu je samo title i userId
     //da li je potrebno ovdje jos sta dodavati?
     let naslov = req.body.title || "Neimenovani scenarij";
-    const userId = req.body.userId;
+    let userId = req.body.userId;
+
+    // validacije
+    if (!userId) return res.status(401).json({ message: "Korisnik nije prijavljen." });
+    if (!req.body.title?.trim()) return res.status(400).json({ message: "Naslov je obavezan." });
 
     try {
-    
-        const noviScenNovaLinija=await napraviNoviScenario(db, naslov, userId);
+        const noviScenNovaLinija=await napraviNoviScenario(db, userId, naslov );
         res.status(200).json({
             id: noviScenNovaLinija.noviScenario.id,
             title: noviScenNovaLinija.noviScenario.title,
             content: [{
-                lineId: noviScenNovaLinija.ovnovaLinija.lineId,
+                lineId: noviScenNovaLinija.novaLinija.lineId,
                 text: noviScenNovaLinija.novaLinija.text,
                 nextLineId: noviScenNovaLinija.novaLinija.nextLineId // Vraća null
             }]
@@ -88,6 +91,12 @@ app.post('/api/scenarios', async (req, res) => {
 });
 
 const napraviNoviScenario=async (db, userId,title)=>{
+    //provjera korisnika PRIJE kreiranja scenarija i linija
+    const korisnik = await db.User.findByPk(userId);
+    if (!korisnik) {
+        throw new Error("Korisnik nije pronađen.");
+    }
+    /*
     const noviScenario=await db.Scenario.create({title});
     const novaLinija = await db.Line.create({
             lineId: 1, 
@@ -96,13 +105,35 @@ const napraviNoviScenario=async (db, userId,title)=>{
             scenarioId: noviScenario.id
         });
 
-    const korisnik = await db.User.findByPk(userId);
-    if (!korisnik) {
-        throw new Error("Korisnik nije pronađen.");
-    }
-    
     await korisnik.addScenario(noviScenario, { through: { role: 'owner' } });
     return {noviScenario, novaLinija};
+    */
+   //mnogo bolje rjesenje od ovog gore pod komentarima
+   //u slucaju pada konekcije sa bazom, svi dodiri sa bazom padaju
+   //sve ili nista
+    return await db.sequelize.transaction(async (t) => {
+        const noviScenario = await db.Scenario.create(
+            { title },
+            { transaction: t } //KORISNO: { transaction: t } govori Sequelize-u: "ovu operaciju izvršavaj u okviru transakcije t"
+        );
+
+        const novaLinija = await db.Line.create(
+            {
+                lineId: 1,
+                text: "",
+                nextLineId: null,
+                scenarioId: noviScenario.id
+            },
+            { transaction: t }
+        );
+
+        await korisnik.addScenario(noviScenario, {
+            through: { role: 'owner' },
+            transaction: t
+        });
+
+        return { noviScenario, novaLinija };
+    });
 
 }
 
