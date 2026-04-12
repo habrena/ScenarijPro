@@ -58,6 +58,13 @@
        
 
     document.addEventListener("DOMContentLoaded", () => {
+        //interesantno
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+            // Stranica je učitana iz bfcache (back/forward cache)
+            ucitajSveScenarije(userId);
+            }
+        });
         osvjeziVrijemeZadnjeIzmjene(1, "last-edit-1");
     });
 
